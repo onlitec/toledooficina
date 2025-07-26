@@ -1,0 +1,185 @@
+from flask import Blueprint, request, jsonify
+from src.models.user import db
+from src.models.cliente import Cliente
+from datetime import datetime
+
+cliente_bp = Blueprint('cliente', __name__)
+
+@cliente_bp.route('/clientes', methods=['GET'])
+def listar_clientes():
+    """Lista todos os clientes"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        search = request.args.get('search', '')
+        
+        query = Cliente.query
+        
+        if search:
+            query = query.filter(
+                Cliente.nome.contains(search) |
+                Cliente.cpf_cnpj.contains(search) |
+                Cliente.email.contains(search)
+            )
+        
+        clientes = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        return jsonify({
+            'success': True,
+            'data': [cliente.to_dict() for cliente in clientes.items],
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': clientes.total,
+                'pages': clientes.pages
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@cliente_bp.route('/clientes/<int:cliente_id>', methods=['GET'])
+def obter_cliente(cliente_id):
+    """Obtém um cliente específico"""
+    try:
+        cliente = Cliente.query.get_or_404(cliente_id)
+        return jsonify({
+            'success': True,
+            'data': cliente.to_dict()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@cliente_bp.route('/clientes', methods=['POST'])
+def criar_cliente():
+    """Cria um novo cliente"""
+    try:
+        data = request.get_json()
+        
+        # Validações básicas
+        if not data.get('nome'):
+            return jsonify({'success': False, 'message': 'Nome é obrigatório'}), 400
+        
+        if not data.get('cpf_cnpj'):
+            return jsonify({'success': False, 'message': 'CPF/CNPJ é obrigatório'}), 400
+        
+        # Verificar se CPF/CNPJ já existe
+        cliente_existente = Cliente.query.filter_by(cpf_cnpj=data['cpf_cnpj']).first()
+        if cliente_existente:
+            return jsonify({'success': False, 'message': 'CPF/CNPJ já cadastrado'}), 400
+        
+        # Criar novo cliente
+        cliente = Cliente(
+            nome=data['nome'],
+            tipo_pessoa=data.get('tipo_pessoa', 'fisica'),
+            cpf_cnpj=data['cpf_cnpj'],
+            rg_ie=data.get('rg_ie'),
+            telefone=data.get('telefone'),
+            celular=data.get('celular'),
+            email=data.get('email'),
+            endereco=data.get('endereco'),
+            numero=data.get('numero'),
+            complemento=data.get('complemento'),
+            bairro=data.get('bairro'),
+            cidade=data.get('cidade'),
+            estado=data.get('estado'),
+            cep=data.get('cep'),
+            observacoes=data.get('observacoes')
+        )
+        
+        # Converter data de nascimento se fornecida
+        if data.get('data_nascimento'):
+            try:
+                cliente.data_nascimento = datetime.strptime(data['data_nascimento'], '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Formato de data inválido'}), 400
+        
+        db.session.add(cliente)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Cliente criado com sucesso',
+            'data': cliente.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@cliente_bp.route('/clientes/<int:cliente_id>', methods=['PUT'])
+def atualizar_cliente(cliente_id):
+    """Atualiza um cliente existente"""
+    try:
+        cliente = Cliente.query.get_or_404(cliente_id)
+        data = request.get_json()
+        
+        # Verificar se CPF/CNPJ já existe em outro cliente
+        if data.get('cpf_cnpj') and data['cpf_cnpj'] != cliente.cpf_cnpj:
+            cliente_existente = Cliente.query.filter_by(cpf_cnpj=data['cpf_cnpj']).first()
+            if cliente_existente:
+                return jsonify({'success': False, 'message': 'CPF/CNPJ já cadastrado'}), 400
+        
+        # Atualizar campos
+        for campo in ['nome', 'tipo_pessoa', 'cpf_cnpj', 'rg_ie', 'telefone', 'celular', 
+                     'email', 'endereco', 'numero', 'complemento', 'bairro', 'cidade', 
+                     'estado', 'cep', 'observacoes']:
+            if campo in data:
+                setattr(cliente, campo, data[campo])
+        
+        # Atualizar data de nascimento se fornecida
+        if data.get('data_nascimento'):
+            try:
+                cliente.data_nascimento = datetime.strptime(data['data_nascimento'], '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'success': False, 'message': 'Formato de data inválido'}), 400
+        
+        cliente.data_atualizacao = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Cliente atualizado com sucesso',
+            'data': cliente.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@cliente_bp.route('/clientes/<int:cliente_id>', methods=['DELETE'])
+def deletar_cliente(cliente_id):
+    """Deleta um cliente (soft delete)"""
+    try:
+        cliente = Cliente.query.get_or_404(cliente_id)
+        cliente.ativo = False
+        cliente.data_atualizacao = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Cliente desativado com sucesso'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@cliente_bp.route('/clientes/<int:cliente_id>/veiculos', methods=['GET'])
+def listar_veiculos_cliente(cliente_id):
+    """Lista veículos de um cliente"""
+    try:
+        cliente = Cliente.query.get_or_404(cliente_id)
+        veiculos = [veiculo.to_dict() for veiculo in cliente.veiculos if veiculo.ativo]
+        
+        return jsonify({
+            'success': True,
+            'data': veiculos
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
