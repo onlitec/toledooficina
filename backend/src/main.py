@@ -12,6 +12,8 @@ from src.routes.relatorios import relatorios_bp
 from src.routes.configuracao import configuracao_bp
 from src.routes.veiculo import veiculo_bp
 from src.routes.estoque import estoque_bp
+from src.routes.ferramenta import ferramenta_bp
+from src.routes.ordem_servico import ordem_servico_bp
 
 # Importar todos os modelos para criar as tabelas
 from src.models.cliente import Cliente
@@ -34,6 +36,8 @@ app.register_blueprint(relatorios_bp, url_prefix='/api')
 app.register_blueprint(configuracao_bp, url_prefix='/api')
 app.register_blueprint(veiculo_bp, url_prefix="/api")
 app.register_blueprint(estoque_bp, url_prefix="/api")
+app.register_blueprint(ferramenta_bp, url_prefix="/api")
+app.register_blueprint(ordem_servico_bp, url_prefix="/api")
 
 # Configuração do banco de dados
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
