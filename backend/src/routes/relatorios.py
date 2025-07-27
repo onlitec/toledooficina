@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, send_file
-from src.models.user import db
+from src.models import db
 from src.models.cliente import Cliente
 from src.models.veiculo import Veiculo
 from src.models.ordem_servico import OrdemServico
