@@ -33,7 +33,7 @@ services:
       - "80:80"
     depends_on:
       backend:
-        condition: service_healthy
+        condition: service_started
     networks:
       - erp-network
     restart: unless-stopped
@@ -94,7 +94,7 @@ services:
       - ./nginx/logs:/var/log/nginx
     depends_on:
       frontend:
-        condition: service_healthy
+        condition: service_started
     networks:
       - erp-network
     restart: unless-stopped
