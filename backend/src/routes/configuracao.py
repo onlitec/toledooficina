@@ -391,3 +391,199 @@ def info_sistema():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+@configuracao_bp.route('/configuracoes/sistema/titulo', methods=['GET'])
+def obter_titulo_empresa():
+    """Obtém o título da empresa"""
+    try:
+        config = ConfiguracaoSistema.query.filter_by(chave='titulo_empresa').first()
+        
+        if not config:
+            # Criar configuração padrão se não existir
+            config = ConfiguracaoSistema(
+                chave='titulo_empresa',
+                valor='ERP Oficina Mecânica',
+                tipo='string',
+                descricao='Título da empresa que aparece no cabeçalho'
+            )
+            db.session.add(config)
+            db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'titulo': config.valor
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@configuracao_bp.route('/configuracoes/sistema/titulo', methods=['PUT'])
+def atualizar_titulo_empresa():
+    """Atualiza o título da empresa"""
+    try:
+        data = request.get_json()
+        titulo = data.get('titulo', '').strip()
+        
+        if not titulo:
+            return jsonify({'success': False, 'message': 'Título não pode estar vazio'}), 400
+        
+        config = ConfiguracaoSistema.query.filter_by(chave='titulo_empresa').first()
+        
+        if not config:
+            config = ConfiguracaoSistema(
+                chave='titulo_empresa',
+                valor=titulo,
+                tipo='string',
+                descricao='Título da empresa que aparece no cabeçalho'
+            )
+            db.session.add(config)
+        else:
+            config.valor = titulo
+            config.data_atualizacao = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Título da empresa atualizado com sucesso',
+            'data': {
+                'titulo': config.valor
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@configuracao_bp.route('/configuracoes/sistema/logotipo', methods=['GET'])
+def obter_logotipo_empresa():
+    """Obtém informações do logotipo da empresa"""
+    try:
+        config = ConfiguracaoSistema.query.filter_by(chave='logotipo_empresa').first()
+        
+        logotipo_info = {
+            'tem_logotipo': False,
+            'url_logotipo': None,
+            'nome_arquivo': None
+        }
+        
+        if config and config.valor:
+            logotipo_path = config.valor
+            if os.path.exists(os.path.join('static/uploads', logotipo_path)):
+                logotipo_info = {
+                    'tem_logotipo': True,
+                    'url_logotipo': f'/static/uploads/{logotipo_path}',
+                    'nome_arquivo': logotipo_path
+                }
+        
+        return jsonify({
+            'success': True,
+            'data': logotipo_info
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@configuracao_bp.route('/configuracoes/sistema/logotipo', methods=['POST'])
+def upload_logotipo_empresa():
+    """Faz upload do logotipo da empresa"""
+    try:
+        if 'logotipo' not in request.files:
+            return jsonify({'success': False, 'message': 'Nenhum arquivo enviado'}), 400
+        
+        file = request.files['logotipo']
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'Nenhum arquivo selecionado'}), 400
+        
+        # Verificar tipo de arquivo
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        if not ('.' in file.filename and 
+                file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
+            return jsonify({'success': False, 'message': 'Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WEBP'}), 400
+        
+        # Verificar tamanho do arquivo (2MB máximo)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        
+        if file_size > 2 * 1024 * 1024:  # 2MB
+            return jsonify({'success': False, 'message': 'Arquivo muito grande. Máximo 2MB'}), 400
+        
+        # Criar diretório se não existir
+        upload_dir = 'static/uploads'
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Gerar nome único para o arquivo
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"logotipo_{timestamp}{ext}"
+        
+        # Salvar arquivo
+        file_path = os.path.join(upload_dir, unique_filename)
+        file.save(file_path)
+        
+        # Remover logotipo anterior se existir
+        config = ConfiguracaoSistema.query.filter_by(chave='logotipo_empresa').first()
+        if config and config.valor:
+            old_file_path = os.path.join(upload_dir, config.valor)
+            if os.path.exists(old_file_path):
+                try:
+                    os.remove(old_file_path)
+                except:
+                    pass  # Ignorar erro se não conseguir remover
+        
+        # Atualizar configuração
+        if not config:
+            config = ConfiguracaoSistema(
+                chave='logotipo_empresa',
+                valor=unique_filename,
+                tipo='string',
+                descricao='Nome do arquivo do logotipo da empresa'
+            )
+            db.session.add(config)
+        else:
+            config.valor = unique_filename
+            config.data_atualizacao = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Logotipo enviado com sucesso',
+            'data': {
+                'nome_arquivo': unique_filename,
+                'url_logotipo': f'/static/uploads/{unique_filename}',
+                'tamanho': file_size
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@configuracao_bp.route('/configuracoes/sistema/logotipo', methods=['DELETE'])
+def remover_logotipo_empresa():
+    """Remove o logotipo da empresa"""
+    try:
+        config = ConfiguracaoSistema.query.filter_by(chave='logotipo_empresa').first()
+        
+        if config and config.valor:
+            # Remover arquivo físico
+            file_path = os.path.join('static/uploads', config.valor)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            
+            # Limpar configuração
+            config.valor = ''
+            config.data_atualizacao = datetime.utcnow()
+            db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Logotipo removido com sucesso'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500

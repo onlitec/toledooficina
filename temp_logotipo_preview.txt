@@ -1,0 +1,29 @@
+                      {/* Preview do logotipo atual */}
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-700 mb-2">Logotipo atual:</p>
+                        <div className="w-32 h-32 border-2 border-gray-200 rounded-lg flex items-center justify-center bg-gray-50">
+                          {sistemaData.logotipo_info.tem_logotipo ? (
+                            <div className="relative">
+                              <img 
+                                src={sistemaData.logotipo_info.url_logotipo} 
+                                alt="Logotipo da empresa" 
+                                className="w-full h-full object-contain rounded-lg"
+                              />
+                              <button
+                                onClick={removerLogotipo}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                title="Remover logotipo"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm">Nenhum logotipo</span>
+                          )}
+                        </div>
+                        {sistemaData.logotipo_info.tem_logotipo && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Arquivo: {sistemaData.logotipo_info.nome_arquivo}
+                          </p>
+                        )}
+                      </div>

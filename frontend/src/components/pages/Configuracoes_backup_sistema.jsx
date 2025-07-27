@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Settings, Building, Mail, Bell, Database, Save, Upload, Eye, EyeOff, MessageCircle, AlertTriangle } from 'lucide-react'
 
 export function Configuracoes() {
   const [activeTab, setActiveTab] = useState('empresa')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  const [sistemaData, setSistemaData] = useState({
+    titulo_empresa: "",
+    logotipo_info: {
+      tem_logotipo: false,
+      url_logotipo: null,
+      nome_arquivo: null
+    }
+  })
 
   // Estados para cada seção
   const [empresaData, setEmpresaData] = useState({
@@ -37,14 +47,10 @@ export function Configuracoes() {
     nome_remetente: ''
   })
 
-  const [sistemaData, setSistemaData] = useState({
-    titulo_empresa: 'ERP Oficina Mecânica',
-    logotipo_arquivo: null
-  })
-
   // Carregar dados ao montar o componente
   useEffect(() => {
     carregarConfiguracoes()
+    carregarSistema()
   }, [])
 
   const carregarConfiguracoes = async () => {
@@ -94,7 +100,7 @@ export function Configuracoes() {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao salvar configuraeeeees da empresa: ' + error.message)
+      alert('Erro ao salvar configurações da empresa: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -125,6 +131,144 @@ export function Configuracoes() {
   }
 
   const testarEmail = async () => {
+
+  const carregarSistema = async () => {
+    try {
+      // Carregar título da empresa
+      const tituloResponse = await fetch('/api/configuracoes/sistema/titulo')
+      if (tituloResponse.ok) {
+        const tituloResult = await tituloResponse.json()
+        if (tituloResult.success) {
+          setSistemaData(prev => ({
+            ...prev,
+            titulo_empresa: tituloResult.data.titulo
+          }))
+        }
+      }
+
+      // Carregar informaçeeeees do logotipo
+      const logoResponse = await fetch('/api/configuracoes/sistema/logotipo')
+      if (logoResponse.ok) {
+        const logoResult = await logoResponse.json()
+        if (logoResult.success) {
+          setSistemaData(prev => ({
+            ...prev,
+            logotipo_info: logoResult.data
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações do sistema:', error)
+    }
+  }
+
+  const salvarTituloEmpresa = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/configuracoes/sistema/titulo', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          titulo: sistemaData.titulo_empresa
+        })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        alert('Título da empresa salvo com sucesso!')
+      } else {
+        throw new Error(result.message)
+      }
+    } catch (error) {
+      alert('Erro ao salvar título da empresa: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const uploadLogotipo = async (file) => {
+    try {
+      setLoading(true)
+      const formData = new FormData()
+      formData.append('logotipo', file)
+
+      const response = await fetch('/api/configuracoes/sistema/logotipo', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        alert('Logotipo enviado com sucesso!')
+        // Atualizar informações do logotipo
+        setSistemaData(prev => ({
+          ...prev,
+          logotipo_info: {
+            tem_logotipo: true,
+            url_logotipo: result.data.url_logotipo,
+            nome_arquivo: result.data.nome_arquivo
+          }
+        }))
+      } else {
+        throw new Error(result.message)
+      }
+    } catch (error) {
+      alert('Erro ao enviar logotipo: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const removerLogotipo = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/configuracoes/sistema/logotipo', {
+        method: 'DELETE'
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        alert('Logotipo removido com sucesso!')
+        // Limpar informações do logotipo
+        setSistemaData(prev => ({
+          ...prev,
+          logotipo_info: {
+            tem_logotipo: false,
+            url_logotipo: null,
+            nome_arquivo: null
+          }
+        }))
+      } else {
+        throw new Error(result.message)
+      }
+    } catch (error) {
+      alert('Erro ao remover logotipo: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      // Verificar tamanho do arquivo
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Arquivo muito grande. Máximo 2MB.')
+        return
+      }
+      
+      // Verificar tipo do arquivo
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        alert('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WEBP.')
+        return
+      }
+      
+      uploadLogotipo(file)
+    }
+  }
     try {
       setLoading(true)
       const response = await fetch('/api/configuracoes/email/testar', {
@@ -143,17 +287,6 @@ export function Configuracoes() {
       }
     } catch (error) {
       alert('Erro ao testar email: ' + error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const salvarSistema = async () => {
-    try {
-      setLoading(true)
-      alert('Configurações do sistema salvas com sucesso!')
-    } catch (error) {
-      alert('Erro ao salvar configurações do sistema: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -270,6 +403,33 @@ export function Configuracoes() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Inscrição Estadual
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaData.inscricao_estadual}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, inscricao_estadual: e.target.value}))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Inscrição estadual"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Inscrição Municipal
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaData.inscricao_municipal}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, inscricao_municipal: e.target.value}))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Inscrição municipal"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Telefone
                     </label>
                     <input
@@ -282,6 +442,21 @@ export function Configuracoes() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Celular
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaData.celular}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, celular: e.target.value}))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       E-mail
                     </label>
                     <input
@@ -292,11 +467,24 @@ export function Configuracoes() {
                       placeholder="contato@empresa.com"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Site
+                    </label>
+                    <input
+                      type="text"
+                      value={empresaData.site}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, site: e.target.value}))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="https://www.empresa.com"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-end">
                   <button
                     onClick={salvarEmpresa}
+                    onClick={salvarTituloEmpresa}
                     disabled={loading}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
@@ -386,6 +574,7 @@ export function Configuracoes() {
                 <div className="flex justify-end space-x-2">
                   <button
                     onClick={testarEmail}
+                    onClick={salvarTituloEmpresa}
                     disabled={loading}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
@@ -393,6 +582,7 @@ export function Configuracoes() {
                   </button>
                   <button
                     onClick={salvarEmail}
+                    onClick={salvarTituloEmpresa}
                     disabled={loading}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
@@ -415,6 +605,12 @@ export function Configuracoes() {
               </h3>
               <p className="text-sm text-gray-600 mb-6">Configure quando e como receber notificações</p>
               
+              <div className="text-center py-12">
+                <Bell className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Configurações de Notificações</h3>
+                <p className="text-gray-600 mb-4">
+                  Configure alertas por email, WhatsApp e outras notificações do sistema.
+                </p>
               <div className="space-y-6">
                 {/* Seção Email */}
                 <div className="border-b border-gray-200 pb-6">
@@ -456,15 +652,15 @@ export function Configuracoes() {
                         <h5 className="font-medium text-gray-900">WhatsApp</h5>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">API URL</label>
-                          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="https://api.whatsapp.com" />
+                          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="https://api.whatsapp.com" />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Token</label>
-                          <input type="password" className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="Token da API" />
+                          <input type="password" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Token da API" />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
-                          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md" placeholder="+5511999999999" />
+                          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="+5511999999999" />
                         </div>
                       </div>
                     </div>
@@ -482,6 +678,7 @@ export function Configuracoes() {
                   </button>
                 </div>
               </div>
+              </div>
             </div>
           </div>
         )}
@@ -494,11 +691,102 @@ export function Configuracoes() {
                 <Database className="h-5 w-5 inline mr-2" />
                 Configurações do Sistema
               </h3>
+              <p className="text-sm text-gray-600 mb-6">Configurações gerais do sistema</p>
+              
+              <div className="text-center py-12">
+                <Database className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Configurações do Sistema</h3>
+                <p className="text-gray-600 mb-4">
+                  Backup, usuários, permissões e outras configurações do sistema.
+                </p>
+              <div className="space-y-6">
+                {/* Seção Email */}
+                <div className="border-b border-gray-200 pb-6">
+                  <div className="flex items-center mb-4">
+                    <Mail className="h-5 w-5 text-blue-500 mr-2" />
+                    <h4 className="text-lg font-medium text-gray-900">Notificações por E-mail</h4>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        E-mails para notificações (separados por vírgula)
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="admin@oficina.com, gerente@oficina.com"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <h5 className="font-medium text-gray-900">Eventos de OS</h5>
+                        <label className="flex items-center">
+                          <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
+                          <span className="ml-2 text-sm text-gray-700">Nova OS criada</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
+                          <span className="ml-2 text-sm text-gray-700">OS concluída</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" className="rounded border-gray-300 text-blue-600" defaultChecked />
+                          <span className="ml-2 text-sm text-gray-700">Estoque baixo</span>
+                        </label>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h5 className="font-medium text-gray-900">WhatsApp</h5>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">API URL</label>
+                          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="https://api.whatsapp.com" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Token</label>
+                          <input type="password" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="Token da API" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                          <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="+5511999999999" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <button className="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Testar WhatsApp
+                  </button>
+                  <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar Configurações
+                  </button>
+                </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+        {/* Aba Sistema */}
+        {activeTab === 'sistema' && (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                <Database className="h-5 w-5 inline mr-2" />
+                Configuraçeeeees do Sistema
+              </h3>
               <p className="text-sm text-gray-600 mb-6">Configure título da empresa e logotipo</p>
               
               <div className="space-y-8">
-#                {/* Seç
-o Identidade Visual */}
+                {/* Seção Identidade Visual */}
                 <div className="border-b border-gray-200 pb-6">
                   <div className="flex items-center mb-4">
                     <Building className="h-5 w-5 text-purple-500 mr-2" />
@@ -512,9 +800,9 @@ o Identidade Visual */}
                       </label>
                       <input
                         type="text"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                         value={sistemaData.titulo_empresa}
                         onChange={(e) => setSistemaData(prev => ({...prev, titulo_empresa: e.target.value}))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                         placeholder="Ex: Oficina Toledo - Mecânica Automotiva"
                       />
                       <p className="text-xs text-gray-500 mt-1">Este título aparecerá no cabeçalho do sistema ao lado do logotipo</p>
@@ -530,7 +818,7 @@ o Identidade Visual */}
                           <div className="flex text-sm text-gray-600">
                             <label className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
                               <span>Fazer upload de arquivo</span>
-                              <input type="file" className="sr-only" accept="image/*" />
+                              <input type="file" className="sr-only" accept="image/*" onChange={handleFileUpload} />
                             </label>
                             <p className="pl-1">ou arraste e solte</p>
                           </div>
@@ -549,9 +837,67 @@ o Identidade Visual */}
                   </div>
                 </div>
 
+                {/* Seção Configurações Gerais */}
+                <div className="border-b border-gray-200 pb-6">
+                  <div className="flex items-center mb-4">
+                    <Settings className="h-5 w-5 text-blue-500 mr-2" />
+                    <h4 className="text-lg font-medium text-gray-900">Configurações Gerais</h4>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Fuso Horário
+                        </label>
+                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <option value="America/Sao_Paulo">América/São Paulo (GMT-3)</option>
+                          <option value="America/Manaus">América/Manaus (GMT-4)</option>
+                          <option value="America/Rio_Branco">América/Rio Branco (GMT-5)</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Formato de Data
+                        </label>
+                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <option value="dd/mm/yyyy">DD/MM/AAAA</option>
+                          <option value="mm/dd/yyyy">MM/DD/AAAA</option>
+                          <option value="yyyy-mm-dd">AAAA-MM-DD</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Moeda Padrão
+                        </label>
+                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <option value="BRL">Real Brasileiro (R$)</option>
+                          <option value="USD">Dólar Americano ($)</option>
+                          <option value="EUR">Euro (€)</option>
+                        </select>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Idioma do Sistema
+                        </label>
+                        <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                          <option value="pt-BR">Português (Brasil)</option>
+                          <option value="en-US">English (US)</option>
+                          <option value="es-ES">Español</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex justify-end">
                   <button
-                    onClick={salvarSistema}
+                    onClick={salvarTituloEmpresa}
                     disabled={loading}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
                   >
