@@ -10,12 +10,12 @@ from src.routes.user import user_bp
 from src.routes.cliente import cliente_bp
 from src.routes.relatorios import relatorios_bp
 from src.routes.configuracao import configuracao_bp
-#from src.routes.veiculo import veiculo_bp
+from src.routes.veiculo import veiculo_bp
 from src.routes.estoque import estoque_bp
 
 # Importar todos os modelos para criar as tabelas
 from src.models.cliente import Cliente
-#from src.models.veiculo import Veiculo
+from src.models.veiculo import Veiculo
 from src.models.peca import Peca, Categoria, Fornecedor, MovimentacaoEstoque
 from src.models.ferramenta import Ferramenta, EmprestimoFerramenta, ManutencaoFerramenta
 from src.models.ordem_servico import OrdemServico, ItemOrdemServico, TipoServico, ServicoOrdem
@@ -32,7 +32,7 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(cliente_bp, url_prefix='/api')
 app.register_blueprint(relatorios_bp, url_prefix='/api')
 app.register_blueprint(configuracao_bp, url_prefix='/api')
-#app.register_blueprint(veiculo_bp, url_prefix="/api")
+app.register_blueprint(veiculo_bp, url_prefix="/api")
 app.register_blueprint(estoque_bp, url_prefix="/api")
 
 # Configuração do banco de dados

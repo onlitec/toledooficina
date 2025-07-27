@@ -71,8 +71,6 @@ class Veiculo(db.Model):
     observacoes = db.Column(db.Text)
     ativo = db.Column(db.Boolean, default=True)
     
-    # Fotos do veículo (JSON array com paths das fotos)
-    fotos = db.Column(db.JSON, default=list)
     
     # Timestamps
     data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
@@ -105,7 +103,6 @@ class Veiculo(db.Model):
             'vencimento_licenciamento': self.vencimento_licenciamento.isoformat() if self.vencimento_licenciamento else None,
             'observacoes': self.observacoes,
             'ativo': self.ativo,
-            'fotos': self.fotos or [],
             'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }
