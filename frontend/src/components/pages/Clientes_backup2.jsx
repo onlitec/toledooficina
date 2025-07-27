@@ -174,67 +174,57 @@ export function Clientes() {
 
       // Validar dados obrigatórios
       if (!clienteData.nome || !clienteData.cpf_cnpj) {
-        alert("Nome e CPF/CNPJ são obrigatórios")
+        alert('Nome e CPF/CNPJ são obrigatórios')
         return
       }
 
-      // Validar veículos se houver algum preenchido
-      const veiculosValidos = veiculos.filter(v => v.marca || v.modelo || v.placa)
-      for (let i = 0; i < veiculosValidos.length; i++) {
-        const veiculo = veiculosValidos[i]
-        if (!veiculo.marca || !veiculo.modelo || !veiculo.placa) {
-          alert(`Marca, modelo e placa são obrigatórios para o veículo ${i + 1}`)
-          return
+      const url = editingCliente?.id ? `/api/clientes/${editingCliente.id}` : '/api/clientes'
+      const method = editingCliente?.id ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(clienteData)
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        const clienteId = result.data.id
+
+        // Cadastrar veículos se não estiver editando
+        if (!editingCliente?.id) {
+          for (const veiculo of veiculos) {
+            if (veiculo.marca && veiculo.modelo && veiculo.placa) {
+              try {
+                await fetch('/api/veiculos', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    ...veiculo,
+                    cliente_id: clienteId
+                  })
+                })
+              } catch (error) {
+                console.error('Erro ao cadastrar veículo:', error)
+              }
+            }
+          }
         }
-      }
 
-      if (editingCliente?.id) {
-        // Atualizar cliente existente
-        const response = await fetch(`/api/clientes/${editingCliente.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(clienteData)
-        })
-
-        const result = await response.json()
-
-        if (result.success) {
-          alert("Cliente atualizado com sucesso!")
-          setShowForm(false)
-          carregarClientes()
-        } else {
-          throw new Error(result.message)
-        }
+        alert(`Cliente ${editingCliente?.id ? 'atualizado' : 'cadastrado'} com sucesso!`)
+        setShowForm(false)
+        carregarClientes()
       } else {
-        // Criar novo cliente com veículos
-        const dadosCompletos = {
-          ...clienteData,
-          veiculos: veiculosValidos
-        }
-
-        const response = await fetch("/api/clientes/com-veiculos", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(dadosCompletos)
-        })
-
-        const result = await response.json()
-
-        if (result.success) {
-          alert(result.message || "Cliente cadastrado com sucesso!")
-          setShowForm(false)
-          carregarClientes()
-        } else {
-          throw new Error(result.message)
-        }
+        throw new Error(result.message)
       }
 
     } catch (error) {
-      alert("Erro ao salvar: " + error.message)
+      alert('Erro ao salvar: ' + error.message)
     } finally {
       setLoading(false)
     }
