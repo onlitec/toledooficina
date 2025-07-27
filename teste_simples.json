@@ -1,0 +1,14 @@
+{
+  "nome": "Teste Cliente",
+  "tipo_pessoa": "fisica",
+  "cpf_cnpj": "11111111111",
+  "telefone": "(11) 1111-1111",
+  "email": "teste@teste.com",
+  "veiculos": [
+    {
+      "marca": "Ford",
+      "modelo": "Ka",
+      "placa": "TEST-123"
+    }
+  ]
+}

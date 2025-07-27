@@ -256,7 +256,6 @@ def criar_cliente_com_veiculos():
                     cambio=veiculo_data.get('cambio'),
                     quilometragem=veiculo_data.get('quilometragem', 0),
                     observacoes=veiculo_data.get('observacoes'),
-                    fotos=veiculo_data.get('fotos', [])
                 )
                 
                 # Processar datas de vencimento do veículo
