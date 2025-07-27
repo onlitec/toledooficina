@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile
     container_name: erp-oficina-frontend
     ports:
-      - "80:80"
+      - "7080:80"
     depends_on:
       backend:
         condition: service_started
