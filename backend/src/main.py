@@ -10,6 +10,7 @@ from src.routes.user import user_bp
 from src.routes.cliente import cliente_bp
 from src.routes.relatorios import relatorios_bp
 from src.routes.configuracao import configuracao_bp
+from src.routes.veiculo import veiculo_bp
 
 # Importar todos os modelos para criar as tabelas
 from src.models.cliente import Cliente
@@ -30,6 +31,7 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(cliente_bp, url_prefix='/api')
 app.register_blueprint(relatorios_bp, url_prefix='/api')
 app.register_blueprint(configuracao_bp, url_prefix='/api')
+app.register_blueprint(veiculo_bp, url_prefix="/api")
 
 # Configuração do banco de dados
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"

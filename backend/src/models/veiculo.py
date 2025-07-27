@@ -67,3 +67,45 @@ class Veiculo(db.Model):
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }
 
+    # Observações e status
+    observacoes = db.Column(db.Text)
+    ativo = db.Column(db.Boolean, default=True)
+    
+    # Fotos do veículo (JSON array com paths das fotos)
+    fotos = db.Column(db.JSON, default=list)
+    
+    # Timestamps
+    data_cadastro = db.Column(db.DateTime, default=datetime.utcnow)
+    data_atualizacao = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relacionamentos
+    ordens_servico = db.relationship('OrdemServico', backref='veiculo', lazy=True)
+    
+    def __repr__(self):
+        return f'<Veiculo {self.marca} {self.modelo} - {self.placa}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'cliente_id': self.cliente_id,
+            'marca': self.marca,
+            'modelo': self.modelo,
+            'ano_fabricacao': self.ano_fabricacao,
+            'ano_modelo': self.ano_modelo,
+            'cor': self.cor,
+            'placa': self.placa,
+            'chassi': self.chassi,
+            'renavam': self.renavam,
+            'combustivel': self.combustivel,
+            'motor': self.motor,
+            'cambio': self.cambio,
+            'quilometragem': self.quilometragem,
+            'vencimento_ipva': self.vencimento_ipva.isoformat() if self.vencimento_ipva else None,
+            'vencimento_seguro': self.vencimento_seguro.isoformat() if self.vencimento_seguro else None,
+            'vencimento_licenciamento': self.vencimento_licenciamento.isoformat() if self.vencimento_licenciamento else None,
+            'observacoes': self.observacoes,
+            'ativo': self.ativo,
+            'fotos': self.fotos or [],
+            'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None,
+            'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
+        }
