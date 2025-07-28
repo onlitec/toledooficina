@@ -15,6 +15,47 @@ import json
 
 relatorios_bp = Blueprint('relatorios', __name__)
 
+@relatorios_bp.route('/relatorios', methods=['GET'])
+def listar_relatorios():
+    """Lista relatórios gerados"""
+    try:
+        # Por enquanto, retorna lista vazia
+        # Em uma implementação completa, você salvaria os relatórios gerados em uma tabela
+        return jsonify({
+            'success': True,
+            'data': []
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@relatorios_bp.route('/relatorios/gerar', methods=['POST'])
+def gerar_relatorio():
+    """Gera um novo relatório"""
+    try:
+        data = request.get_json()
+
+        # Validações básicas
+        if not data.get('titulo'):
+            return jsonify({'success': False, 'message': 'Título é obrigatório'}), 400
+
+        if not data.get('tipo'):
+            return jsonify({'success': False, 'message': 'Tipo é obrigatório'}), 400
+
+        # Por enquanto, simula a geração do relatório
+        return jsonify({
+            'success': True,
+            'message': 'Relatório gerado com sucesso!',
+            'data': {
+                'id': 1,
+                'titulo': data.get('titulo'),
+                'tipo': data.get('tipo'),
+                'status': 'gerado'
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @relatorios_bp.route('/relatorios/dashboard', methods=['GET'])
 def dashboard_data():
     """Retorna dados para o dashboard"""
