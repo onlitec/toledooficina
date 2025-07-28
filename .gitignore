@@ -1,0 +1,6 @@
+
+# Security secrets
+secrets/
+*.key
+*.pem
+*.crt

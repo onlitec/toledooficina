@@ -127,15 +127,40 @@ export function Configuracoes() {
   const testarEmail = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/configuracoes/email/testar', {
-        method: 'POST',
+  const salvarSistema = async () => {
+    try {
+      setLoading(true)
+      
+      // Salvar título da empresa
+      const tituloResponse = await fetch("/api/configuracoes/sistema/titulo", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify(emailData)
+        body: JSON.stringify({ titulo: sistemaData.titulo_empresa })
       })
 
+      const tituloResult = await tituloResponse.json()
+      if (!tituloResult.success) {
+        throw new Error(tituloResult.message)
+      }
+
+      // Salvar título da empresa
+      const response = await fetch("/api/configuracoes/sistema/titulo", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo: sistemaData.titulo_empresa })
+      })
       const result = await response.json()
+      if (!result.success) throw new Error(result.message)
+
+      alert("Configurações do sistema salvas com sucesso!")
+    } catch (error) {
+      alert("Erro ao salvar configurações do sistema: " + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
       if (result.success) {
         alert('Email de teste enviado com sucesso!')
       } else {
@@ -143,17 +168,6 @@ export function Configuracoes() {
       }
     } catch (error) {
       alert('Erro ao testar email: ' + error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const salvarSistema = async () => {
-    try {
-      setLoading(true)
-      alert('Configurações do sistema salvas com sucesso!')
-    } catch (error) {
-      alert('Erro ao salvar configurações do sistema: ' + error.message)
     } finally {
       setLoading(false)
     }

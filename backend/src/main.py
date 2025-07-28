@@ -23,10 +23,15 @@ from src.models.financeiro import ContaReceber, ContaPagar, PagamentoRecebimento
 from src.models.configuracao import ConfiguracaoEmpresa, ConfiguracaoEmail, ConfiguracaoNotificacao, ConfiguracaoSistema
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+# Configurar SECRET_KEY a partir do arquivo secret ou variável de ambiente
+try:
+    with open('/run/secrets/secret_key', 'r') as f:
+        app.config['SECRET_KEY'] = f.read().strip()
+except FileNotFoundError:
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
 
 # Habilitar CORS para todas as rotas
-CORS(app)
+CORS(app, origins=['http://localhost:7080', 'http://127.0.0.1:7080'], supports_credentials=True)
 
 app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(cliente_bp, url_prefix='/api')
