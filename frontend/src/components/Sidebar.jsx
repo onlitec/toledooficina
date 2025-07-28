@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
-import { 
-  LayoutDashboard, 
-  Users, 
-  Car, 
-  Package, 
-  Wrench, 
-  FileText, 
-  DollarSign, 
-  BarChart3, 
+import { useSystem } from '@/contexts/SystemContext'
+import {
+  LayoutDashboard,
+  Users,
+  Car,
+  Package,
+  Wrench,
+  FileText,
+  DollarSign,
+  BarChart3,
   Settings,
   X,
   ChevronLeft,
@@ -29,6 +30,7 @@ const menuItems = [
 
 export function Sidebar({ open, setOpen }) {
   const location = useLocation()
+  const { systemConfig } = useSystem()
 
   return (
     <>
@@ -50,8 +52,18 @@ export function Sidebar({ open, setOpen }) {
         <div className="flex items-center justify-between p-4 border-b">
           {open && (
             <div className="flex items-center space-x-2">
-              <Wrench className="h-8 w-8 text-blue-600" />
-              <span className="text-xl font-bold text-gray-800">ERP Oficina</span>
+              {systemConfig.logotipo_info?.tem_logotipo ? (
+                <img
+                  src={systemConfig.logotipo_info.url_logotipo}
+                  alt="Logo da empresa"
+                  className="h-8 w-8 object-contain"
+                />
+              ) : (
+                <Wrench className="h-8 w-8 text-blue-600" />
+              )}
+              <span className="text-xl font-bold text-gray-800">
+                {systemConfig.titulo_empresa}
+              </span>
             </div>
           )}
           

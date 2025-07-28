@@ -469,7 +469,7 @@ def obter_logotipo_empresa():
         
         if config and config.valor:
             logotipo_path = config.valor
-            if os.path.exists(os.path.join('static/uploads', logotipo_path)):
+            if os.path.exists(os.path.join('uploads', logotipo_path)):
                 logotipo_info = {
                     'tem_logotipo': True,
                     'url_logotipo': f'/static/uploads/{logotipo_path}',
@@ -510,7 +510,7 @@ def upload_logotipo_empresa():
             return jsonify({'success': False, 'message': 'Arquivo muito grande. Máximo 2MB'}), 400
         
         # Criar diretório se não existir
-        upload_dir = 'static/uploads'
+        upload_dir = 'uploads'
         os.makedirs(upload_dir, exist_ok=True)
         
         # Gerar nome único para o arquivo
@@ -526,7 +526,7 @@ def upload_logotipo_empresa():
         # Remover logotipo anterior se existir
         config = ConfiguracaoSistema.query.filter_by(chave='logotipo_empresa').first()
         if config and config.valor:
-            old_file_path = os.path.join(upload_dir, config.valor)
+            old_file_path = os.path.join('uploads', config.valor)
             if os.path.exists(old_file_path):
                 try:
                     os.remove(old_file_path)
@@ -570,7 +570,7 @@ def remover_logotipo_empresa():
         
         if config and config.valor:
             # Remover arquivo físico
-            file_path = os.path.join('static/uploads', config.valor)
+            file_path = os.path.join('uploads', config.valor)
             if os.path.exists(file_path):
                 os.remove(file_path)
             

@@ -151,7 +151,24 @@ export function Configuracoes() {
   const salvarSistema = async () => {
     try {
       setLoading(true)
-      alert('Configurações do sistema salvas com sucesso!')
+      
+      // Salvar título da empresa
+      const response = await fetch('/api/configuracoes/sistema/titulo', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          titulo: sistemaData.titulo_empresa
+        })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        alert('Configurações do sistema salvas com sucesso!')
+      } else {
+        throw new Error(result.message)
+      }
     } catch (error) {
       alert('Erro ao salvar configurações do sistema: ' + error.message)
     } finally {

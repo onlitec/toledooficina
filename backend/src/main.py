@@ -51,6 +51,12 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+@app.route("/static/uploads/<path:filename>")
+def serve_uploads(filename):
+    """Serve uploaded files"""
+    uploads_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads')
+    return send_from_directory(uploads_dir, filename)
+
 @app.route("/")
 def serve(path):
     static_folder_path = app.static_folder

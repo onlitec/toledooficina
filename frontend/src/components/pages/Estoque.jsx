@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react'
-import { 
-  Plus, 
-  Search, 
-  Package, 
-  Edit, 
-  Trash2, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  Plus,
+  Search,
+  Package,
+  Edit,
+  Trash2,
+  TrendingUp,
+  TrendingDown,
   AlertTriangle,
   Filter,
   BarChart3,
   Eye,
-  ArrowUpDown
+  ArrowUpDown,
+  ArrowLeft,
+  Save
 } from 'lucide-react'
-import { PecaForm } from './PecaForm'
-import { MovimentacaoForm } from './MovimentacaoForm'
 
 export function Estoque() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -28,6 +28,20 @@ export function Estoque() {
   const [filtroCategoria, setFiltroCategoria] = useState('')
   const [filtroStatus, setFiltroStatus] = useState('')
   const [resumo, setResumo] = useState({})
+
+  // Estados para o formulário inline
+  const [pecaData, setPecaData] = useState({
+    nome: '',
+    codigo: '',
+    categoria_id: '',
+    preco_custo: '',
+    preco_venda: '',
+    estoque_minimo: '',
+    estoque_atual: '',
+    fornecedor: '',
+    localizacao: '',
+    descricao: ''
+  })
 
   useEffect(() => {
     carregarDados()
@@ -102,12 +116,43 @@ export function Estoque() {
 
   const handleNovaPeca = () => {
     setEditingPeca(null)
+    setPecaData({
+      nome: '',
+      codigo: '',
+      categoria_id: '',
+      preco_custo: '',
+      preco_venda: '',
+      estoque_minimo: '',
+      estoque_atual: '',
+      fornecedor: '',
+      localizacao: '',
+      descricao: ''
+    })
     setShowForm(true)
   }
 
   const handleEditarPeca = (peca) => {
     setEditingPeca(peca)
+    setPecaData({
+      nome: peca.nome || '',
+      codigo: peca.codigo || '',
+      categoria_id: peca.categoria_id || '',
+      preco_custo: peca.preco_custo || '',
+      preco_venda: peca.preco_venda || '',
+      estoque_minimo: peca.estoque_minimo || '',
+      estoque_atual: peca.estoque_atual || '',
+      fornecedor: peca.fornecedor || '',
+      localizacao: peca.localizacao || '',
+      descricao: peca.descricao || ''
+    })
     setShowForm(true)
+  }
+
+  const handlePecaChange = (field, value) => {
+    setPecaData(prev => ({
+      ...prev,
+      [field]: value
+    }))
   }
 
   const handleMovimentacao = (peca) => {
@@ -145,10 +190,51 @@ export function Estoque() {
     setSelectedPeca(null)
   }
 
-  const handleSavePeca = () => {
-    setShowForm(false)
-    setEditingPeca(null)
-    carregarDados()
+  const salvarPeca = async () => {
+    try {
+      setLoading(true)
+
+      // Validações básicas
+      if (!pecaData.nome.trim()) {
+        alert('Nome da peça é obrigatório')
+        return
+      }
+
+      if (!pecaData.codigo.trim()) {
+        alert('Código da peça é obrigatório')
+        return
+      }
+
+      const url = editingPeca?.id
+        ? `/api/pecas/${editingPeca.id}`
+        : '/api/pecas'
+
+      const method = editingPeca?.id ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pecaData)
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        alert(editingPeca?.id ? 'Peça atualizada com sucesso!' : 'Peça cadastrada com sucesso!')
+        setShowForm(false)
+        setEditingPeca(null)
+        carregarDados()
+      } else {
+        throw new Error(result.message)
+      }
+
+    } catch (error) {
+      alert('Erro ao salvar peça: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSaveMovimentacao = () => {
@@ -200,12 +286,191 @@ export function Estoque() {
 
   if (showForm) {
     return (
-      <PecaForm 
-        peca={editingPeca}
-        categorias={categorias}
-        onClose={handleCloseForm} 
-        onSave={handleSavePeca} 
-      />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {editingPeca?.id ? 'Editar Peça' : 'Cadastrar Peça'}
+            </h1>
+            <p className="text-gray-600">
+              {editingPeca?.id ? 'Edite os dados da peça' : 'Cadastre uma nova peça no estoque'}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowForm(false)}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </button>
+        </div>
+
+        {/* Formulário da Peça */}
+        <div className="bg-white shadow rounded-lg">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+              Dados da Peça
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nome da Peça *
+                </label>
+                <input
+                  type="text"
+                  value={pecaData.nome}
+                  onChange={(e) => handlePecaChange('nome', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nome da peça"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Código *
+                </label>
+                <input
+                  type="text"
+                  value={pecaData.codigo}
+                  onChange={(e) => handlePecaChange('codigo', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Código da peça"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Categoria
+                </label>
+                <select
+                  value={pecaData.categoria_id}
+                  onChange={(e) => handlePecaChange('categoria_id', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categorias.map(categoria => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nome}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Preço de Custo
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={pecaData.preco_custo}
+                  onChange={(e) => handlePecaChange('preco_custo', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0,00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Preço de Venda
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={pecaData.preco_venda}
+                  onChange={(e) => handlePecaChange('preco_venda', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0,00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Estoque Mínimo
+                </label>
+                <input
+                  type="number"
+                  value={pecaData.estoque_minimo}
+                  onChange={(e) => handlePecaChange('estoque_minimo', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Estoque Atual
+                </label>
+                <input
+                  type="number"
+                  value={pecaData.estoque_atual}
+                  onChange={(e) => handlePecaChange('estoque_atual', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="0"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Fornecedor
+                </label>
+                <input
+                  type="text"
+                  value={pecaData.fornecedor}
+                  onChange={(e) => handlePecaChange('fornecedor', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nome do fornecedor"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Localização
+                </label>
+                <input
+                  type="text"
+                  value={pecaData.localizacao}
+                  onChange={(e) => handlePecaChange('localizacao', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ex: Prateleira A1"
+                />
+              </div>
+
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descrição
+                </label>
+                <textarea
+                  value={pecaData.descricao}
+                  onChange={(e) => handlePecaChange('descricao', e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Descrição detalhada da peça"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Botões de Ação */}
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={() => setShowForm(false)}
+            className="px-6 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={salvarPeca}
+            disabled={loading}
+            className="px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+          >
+            <Save className="h-4 w-4 inline mr-2" />
+            {loading ? 'Salvando...' : (editingPeca?.id ? 'Atualizar Peça' : 'Salvar Peça')}
+          </button>
+        </div>
+      </div>
     )
   }
 

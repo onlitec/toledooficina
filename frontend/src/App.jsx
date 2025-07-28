@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { SystemProvider } from '@/contexts/SystemContext'
 import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { Dashboard } from '@/components/pages/Dashboard'
@@ -14,33 +15,35 @@ import { Configuracoes } from '@/components/pages/Configuracoes'
 import './App.css'
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
-        
-        <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
-          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-          
-          <main className="p-6">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/clientes" element={<Clientes />} />
-              <Route path="/veiculos" element={<Veiculos />} />
-              <Route path="/estoque" element={<Estoque />} />
-              <Route path="/ferramentas" element={<Ferramentas />} />
-              <Route path="/ordens-servico" element={<OrdensServico />} />
-              <Route path="/financeiro" element={<Financeiro />} />
-              <Route path="/relatorios" element={<Relatorios />} />
-              <Route path="/configuracoes" element={<Configuracoes />} />
-            </Routes>
-          </main>
+    <SystemProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} />
+
+          <div className={`transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
+            <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+            <main className="p-6">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/clientes" element={<Clientes />} />
+                <Route path="/veiculos" element={<Veiculos />} />
+                <Route path="/estoque" element={<Estoque />} />
+                <Route path="/ferramentas" element={<Ferramentas />} />
+                <Route path="/ordens-servico" element={<OrdensServico />} />
+                <Route path="/financeiro" element={<Financeiro />} />
+                <Route path="/relatorios" element={<Relatorios />} />
+                <Route path="/configuracoes" element={<Configuracoes />} />
+              </Routes>
+            </main>
+          </div>
         </div>
-      </div>
-    </Router>
+      </Router>
+    </SystemProvider>
   )
 }
 

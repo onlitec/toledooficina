@@ -1,10 +1,13 @@
+
 import { useState, useEffect } from 'react'
+import { useSystem } from '@/contexts/SystemContext'
 import { Settings, Building, Mail, Bell, Database, Save, Upload, Eye, EyeOff, MessageCircle, AlertTriangle } from 'lucide-react'
 
 export function Configuracoes() {
   const [activeTab, setActiveTab] = useState('empresa')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const { systemConfig, atualizarTituloEmpresa, atualizarLogotipo, carregarConfiguracoesDoSistema } = useSystem()
 
   // Estados para cada seção
   const [empresaData, setEmpresaData] = useState({
@@ -38,9 +41,19 @@ export function Configuracoes() {
   })
 
   const [sistemaData, setSistemaData] = useState({
-    titulo_empresa: 'ERP Oficina Mecânica',
-    logotipo_arquivo: null
+    titulo_empresa: systemConfig.titulo_empresa,
+    logotipo_arquivo: null,
+    logotipo_info: systemConfig.logotipo_info
   })
+
+  // Sincronizar com o contexto global
+  useEffect(() => {
+    setSistemaData(prev => ({
+      ...prev,
+      titulo_empresa: systemConfig.titulo_empresa,
+      logotipo_info: systemConfig.logotipo_info
+    }))
+  }, [systemConfig])
 
   // Carregar dados ao montar o componente
   useEffect(() => {
@@ -50,7 +63,7 @@ export function Configuracoes() {
   const carregarConfiguracoes = async () => {
     try {
       setLoading(true)
-      
+
       // Carregar configurações da empresa
       const empresaResponse = await fetch('/api/configuracoes/empresa')
       if (empresaResponse.ok) {
@@ -69,10 +82,43 @@ export function Configuracoes() {
         }
       }
 
+      // Carregar configurações do sistema
+      await carregarSistema()
+
     } catch (error) {
       console.error('Erro ao carregar configurações:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const carregarSistema = async () => {
+    try {
+      // Carregar título da empresa
+      const tituloResponse = await fetch('/api/configuracoes/sistema/titulo')
+      if (tituloResponse.ok) {
+        const tituloResult = await tituloResponse.json()
+        if (tituloResult.success) {
+          setSistemaData(prev => ({
+            ...prev,
+            titulo_empresa: tituloResult.data.titulo
+          }))
+        }
+      }
+
+      // Carregar informações do logotipo
+      const logoResponse = await fetch('/api/configuracoes/sistema/logotipo')
+      if (logoResponse.ok) {
+        const logoResult = await logoResponse.json()
+        if (logoResult.success) {
+          setSistemaData(prev => ({
+            ...prev,
+            logotipo_info: logoResult.data
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações do sistema:', error)
     }
   }
 
@@ -127,40 +173,15 @@ export function Configuracoes() {
   const testarEmail = async () => {
     try {
       setLoading(true)
-  const salvarSistema = async () => {
-    try {
-      setLoading(true)
-      
-      // Salvar título da empresa
-      const tituloResponse = await fetch("/api/configuracoes/sistema/titulo", {
-        method: "PUT",
+      const response = await fetch('/api/configuracoes/email/teste', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json"
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ titulo: sistemaData.titulo_empresa })
+        body: JSON.stringify(emailData)
       })
 
-      const tituloResult = await tituloResponse.json()
-      if (!tituloResult.success) {
-        throw new Error(tituloResult.message)
-      }
-
-      // Salvar título da empresa
-      const response = await fetch("/api/configuracoes/sistema/titulo", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ titulo: sistemaData.titulo_empresa })
-      })
       const result = await response.json()
-      if (!result.success) throw new Error(result.message)
-
-      alert("Configurações do sistema salvas com sucesso!")
-    } catch (error) {
-      alert("Erro ao salvar configurações do sistema: " + error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
       if (result.success) {
         alert('Email de teste enviado com sucesso!')
       } else {
@@ -170,6 +191,126 @@ export function Configuracoes() {
       alert('Erro ao testar email: ' + error.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const salvarSistema = async () => {
+    try {
+      setLoading(true)
+
+      // Salvar título da empresa
+      const response = await fetch("/api/configuracoes/sistema/titulo", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ titulo: sistemaData.titulo_empresa })
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.message)
+      }
+
+      alert("Configurações do sistema salvas com sucesso!")
+
+      // Atualizar contexto global
+      atualizarTituloEmpresa(sistemaData.titulo_empresa)
+
+      // Recarregar configurações para atualizar outros componentes
+      await carregarConfiguracoesDoSistema()
+    } catch (error) {
+      alert("Erro ao salvar configurações do sistema: " + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const uploadLogotipo = async (file) => {
+    try {
+      setLoading(true)
+      const formData = new FormData()
+      formData.append('logotipo', file)
+
+      const response = await fetch('/api/configuracoes/sistema/logotipo', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        alert('Logotipo enviado com sucesso!')
+        // Atualizar informações do logotipo
+        const logoInfo = {
+          tem_logotipo: true,
+          url_logotipo: result.data.url_logotipo,
+          nome_arquivo: result.data.nome_arquivo
+        }
+        setSistemaData(prev => ({
+          ...prev,
+          logotipo_info: logoInfo
+        }))
+        // Atualizar contexto global
+        atualizarLogotipo(logoInfo)
+      } else {
+        throw new Error(result.message)
+      }
+    } catch (error) {
+      alert('Erro ao enviar logotipo: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const removerLogotipo = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/configuracoes/sistema/logotipo', {
+        method: 'DELETE'
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        alert('Logotipo removido com sucesso!')
+        // Limpar informações do logotipo
+        const logoInfo = {
+          tem_logotipo: false,
+          url_logotipo: null,
+          nome_arquivo: null
+        }
+        setSistemaData(prev => ({
+          ...prev,
+          logotipo_info: logoInfo
+        }))
+        // Atualizar contexto global
+        atualizarLogotipo(logoInfo)
+      } else {
+        throw new Error(result.message)
+      }
+    } catch (error) {
+      alert('Erro ao remover logotipo: ' + error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      // Verificar tamanho do arquivo
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Arquivo muito grande. Máximo 2MB.')
+        return
+      }
+
+      // Verificar tipo do arquivo
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        alert('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WebP.')
+        return
+      }
+
+      uploadLogotipo(file)
     }
   }
 
@@ -544,20 +685,49 @@ o Identidade Visual */}
                           <div className="flex text-sm text-gray-600">
                             <label className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
                               <span>Fazer upload de arquivo</span>
-                              <input type="file" className="sr-only" accept="image/*" />
+                              <input
+                                type="file"
+                                className="sr-only"
+                                accept="image/*"
+                                onChange={handleFileUpload}
+                                disabled={loading}
+                              />
                             </label>
                             <p className="pl-1">ou arraste e solte</p>
                           </div>
                           <p className="text-xs text-gray-500">PNG, JPG, GIF até 2MB</p>
                         </div>
                       </div>
-                      
+
                       {/* Preview do logotipo atual */}
                       <div className="mt-4">
                         <p className="text-sm font-medium text-gray-700 mb-2">Logotipo atual:</p>
-                        <div className="w-32 h-32 border-2 border-gray-200 rounded-lg flex items-center justify-center bg-gray-50">
-                          <span className="text-gray-400 text-sm">Nenhum logotipo</span>
+                        <div className="w-32 h-32 border-2 border-gray-200 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden">
+                          {sistemaData.logotipo_info?.tem_logotipo ? (
+                            <div className="relative w-full h-full">
+                              <img
+                                src={sistemaData.logotipo_info.url_logotipo}
+                                alt="Logotipo da empresa"
+                                className="w-full h-full object-contain"
+                              />
+                              <button
+                                onClick={removerLogotipo}
+                                disabled={loading}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                title="Remover logotipo"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-sm">Nenhum logotipo</span>
+                          )}
                         </div>
+                        {sistemaData.logotipo_info?.nome_arquivo && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Arquivo: {sistemaData.logotipo_info.nome_arquivo}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
