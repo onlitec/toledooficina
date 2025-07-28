@@ -48,7 +48,8 @@ export function Veiculos() {
   const filteredVeiculos = veiculos.filter(veiculo =>
     veiculo.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
     veiculo.marca.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    veiculo.modelo.toLowerCase().includes(searchTerm.toLowerCase())
+    veiculo.modelo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (veiculo.cliente_nome && veiculo.cliente_nome.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   const handleNovoVeiculo = () => {
@@ -219,7 +220,16 @@ export function Veiculos() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <User className="h-4 w-4 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-900">Cliente #{veiculo.cliente_id}</span>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {veiculo.cliente_nome || `Cliente #${veiculo.cliente_id}`}
+                            </div>
+                            {veiculo.cliente_telefone && (
+                              <div className="text-sm text-gray-500">
+                                {veiculo.cliente_telefone}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

@@ -12,24 +12,38 @@ def listar_veiculos():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 50, type=int)
         cliente_id = request.args.get('cliente_id', type=int)
-        
-        query = Veiculo.query
-        
+
+        # Fazer join com a tabela de clientes para obter o nome
+        query = db.session.query(Veiculo, Cliente).join(Cliente, Veiculo.cliente_id == Cliente.id)
+
         if cliente_id:
-            query = query.filter_by(cliente_id=cliente_id)
-        
-        veiculos = query.filter_by(ativo=True).paginate(
+            query = query.filter(Veiculo.cliente_id == cliente_id)
+
+        # Filtrar apenas veículos ativos
+        query = query.filter(Veiculo.ativo == True)
+
+        # Aplicar paginação
+        veiculos_result = query.paginate(
             page=page, per_page=per_page, error_out=False
         )
-        
+
+        # Preparar dados com informações do cliente
+        veiculos_data = []
+        for veiculo, cliente in veiculos_result.items:
+            veiculo_dict = veiculo.to_dict()
+            veiculo_dict['cliente_nome'] = cliente.nome
+            veiculo_dict['cliente_telefone'] = cliente.telefone
+            veiculo_dict['cliente_email'] = cliente.email
+            veiculos_data.append(veiculo_dict)
+
         return jsonify({
             'success': True,
-            'data': [veiculo.to_dict() for veiculo in veiculos.items],
+            'data': veiculos_data,
             'pagination': {
                 'page': page,
-                'pages': veiculos.pages,
+                'pages': veiculos_result.pages,
                 'per_page': per_page,
-                'total': veiculos.total
+                'total': veiculos_result.total
             }
         })
     except Exception as e:
