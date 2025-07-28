@@ -11,15 +11,14 @@ services:
       - FLASK_DEBUG=0
       - DATABASE_URL=sqlite:///src/database/app.db
       - PYTHONPATH=/app
-      - SECRET_KEY_FILE=/run/secrets/secret_key
+      - SECRET_KEY=${SECRET_KEY:-your-default-secret-key-change-in-production}
     volumes:
       - backend_data:/app/src/database
       - uploads_data:/app/uploads
       - backups_data:/app/backups
     networks:
       - erp-network
-    secrets:
-      - secret_key
+
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/api/users"]
@@ -40,8 +39,7 @@ services:
         condition: service_started
     networks:
       - erp-network
-    secrets:
-      - secret_key
+
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/"]
@@ -62,8 +60,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - erp-network
-    secrets:
-      - secret_key
+
     restart: unless-stopped
     profiles:
       - production
@@ -81,8 +78,7 @@ services:
       - redis_data:/data
     networks:
       - erp-network
-    secrets:
-      - secret_key
+
     restart: unless-stopped
     profiles:
       - production
@@ -107,8 +103,7 @@ services:
         condition: service_started
     networks:
       - erp-network
-    secrets:
-      - secret_key
+
     restart: unless-stopped
     profiles:
       - production
@@ -133,8 +128,4 @@ volumes:
     driver: local
 
 
-secrets:
-  postgres_password:
-    file: ./secrets/postgres_password.txt
-  secret_key:
-    file: ./secrets/secret_key.txt
+
