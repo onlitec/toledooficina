@@ -5,7 +5,7 @@ class Ferramenta(db.Model):
     __tablename__ = 'ferramentas'
     
     id = db.Column(db.Integer, primary_key=True)
-    codigo = db.Column(db.String(50), unique=True, nullable=False)
+    codigo = db.Column(db.String(50), unique=True, nullable=True)  # Permitir null temporariamente para gerar código
     nome = db.Column(db.String(100), nullable=False)
     descricao = db.Column(db.Text)
     marca = db.Column(db.String(50))

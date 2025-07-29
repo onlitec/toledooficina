@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from datetime import datetime, date
+from datetime import datetime
 from src.models import db
 from src.models.ferramenta import Ferramenta
 
@@ -18,15 +18,15 @@ def get_ferramentas():
                 db.or_(
                     Ferramenta.nome.ilike(f'%{search}%'),
                     Ferramenta.codigo.ilike(f'%{search}%'),
-                    Ferramenta.marca.ilike(f'%{search}%')
+                    Ferramenta.marca.ilike(f'%{search}%'),
+                    Ferramenta.modelo.ilike(f'%{search}%')
                 )
             )
         
         if status:
             query = query.filter(Ferramenta.status == status)
         
-        ferramentas = query.order_by(Ferramenta.nome).all()
-        
+        ferramentas = query.all()
         return jsonify([ferramenta.to_dict() for ferramenta in ferramentas])
     
     except Exception as e:
@@ -36,7 +36,7 @@ def get_ferramentas():
 def create_ferramenta():
     try:
         data = request.get_json()
-
+        
         # Validar dados obrigatórios
         if not data.get('nome'):
             return jsonify({'success': False, 'message': 'Nome é obrigatório'}), 400
@@ -103,13 +103,13 @@ def create_ferramenta():
         
         db.session.add(ferramenta)
         db.session.commit()
-
+        
         return jsonify({
             'success': True,
             'message': 'Ferramenta cadastrada com sucesso!',
             'data': ferramenta.to_dict()
         }), 201
-
+    
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -119,7 +119,7 @@ def get_ferramenta(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
         return jsonify(ferramenta.to_dict())
-
+    
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -129,38 +129,59 @@ def update_ferramenta(ferramenta_id):
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
         data = request.get_json()
         
-        # Verificar se o código já existe (exceto para a própria ferramenta)
-        if data.get('codigo') and data['codigo'] != ferramenta.codigo:
-            existing = Ferramenta.query.filter_by(codigo=data['codigo']).first()
-            if existing:
-                return jsonify({'error': 'Código já existe'}), 400
-        
         # Atualizar campos
-        ferramenta.codigo = data.get('codigo', ferramenta.codigo)
-        ferramenta.nome = data.get('nome', ferramenta.nome)
-        ferramenta.descricao = data.get('descricao', ferramenta.descricao)
-        ferramenta.marca = data.get('marca', ferramenta.marca)
-        ferramenta.modelo = data.get('modelo', ferramenta.modelo)
-        ferramenta.numero_serie = data.get('numero_serie', ferramenta.numero_serie)
-        ferramenta.localizacao = data.get('localizacao', ferramenta.localizacao)
-        ferramenta.status = data.get('status', ferramenta.status)
-        ferramenta.valor_aquisicao = data.get('valor_aquisicao', ferramenta.valor_aquisicao)
-        ferramenta.fornecedor = data.get('fornecedor', ferramenta.fornecedor)
-        ferramenta.intervalo_manutencao_dias = data.get('intervalo_manutencao_dias', ferramenta.intervalo_manutencao_dias)
-        ferramenta.observacoes = data.get('observacoes', ferramenta.observacoes)
+        if 'nome' in data:
+            ferramenta.nome = data['nome']
+        if 'descricao' in data:
+            ferramenta.descricao = data['descricao']
+        if 'marca' in data:
+            ferramenta.marca = data['marca']
+        if 'modelo' in data:
+            ferramenta.modelo = data['modelo']
+        if 'numero_serie' in data:
+            ferramenta.numero_serie = data['numero_serie']
+        if 'localizacao' in data:
+            ferramenta.localizacao = data['localizacao']
+        if 'status' in data:
+            ferramenta.status = data['status']
+        if 'fornecedor' in data:
+            ferramenta.fornecedor = data['fornecedor']
+        if 'observacoes' in data:
+            ferramenta.observacoes = data['observacoes']
         
-        if data.get('data_aquisicao'):
-            ferramenta.data_aquisicao = datetime.strptime(data['data_aquisicao'], '%Y-%m-%d').date()
+        # Processar data de aquisição
+        if 'data_aquisicao' in data and data['data_aquisicao']:
+            try:
+                ferramenta.data_aquisicao = datetime.strptime(data['data_aquisicao'], '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # Processar valor de aquisição
+        if 'valor_aquisicao' in data and data['valor_aquisicao']:
+            try:
+                ferramenta.valor_aquisicao = float(data['valor_aquisicao'])
+            except (ValueError, TypeError):
+                pass
+        
+        # Processar intervalo de manutenção
+        if 'intervalo_manutencao_dias' in data and data['intervalo_manutencao_dias']:
+            try:
+                ferramenta.intervalo_manutencao_dias = int(data['intervalo_manutencao_dias'])
+            except (ValueError, TypeError):
+                pass
         
         ferramenta.data_atualizacao = datetime.utcnow()
-        
         db.session.commit()
         
-        return jsonify(ferramenta.to_dict())
+        return jsonify({
+            'success': True,
+            'message': 'Ferramenta atualizada com sucesso!',
+            'data': ferramenta.to_dict()
+        })
     
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @ferramenta_bp.route('/ferramentas/<int:ferramenta_id>', methods=['DELETE'])
 def delete_ferramenta(ferramenta_id):
@@ -168,105 +189,16 @@ def delete_ferramenta(ferramenta_id):
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
         ferramenta.ativo = False
         ferramenta.data_atualizacao = datetime.utcnow()
-
-        db.session.commit()
-
-        return jsonify({'message': 'Ferramenta removida com sucesso'})
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>/emprestimo', methods=['POST'])
-def emprestar_ferramenta(ferramenta_id):
-    try:
-        ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
-        data = request.get_json()
-        
-        if ferramenta.status != 'disponivel':
-            return jsonify({'error': 'Ferramenta não está disponível'}), 400
-        
-        emprestimo = EmprestimoFerramenta(
-            ferramenta_id=ferramenta_id,
-            responsavel=data['responsavel'],
-            data_devolucao_prevista=datetime.strptime(data['data_devolucao_prevista'], '%Y-%m-%d %H:%M:%S') if data.get('data_devolucao_prevista') else None,
-            observacoes=data.get('observacoes')
-        )
-        
-        ferramenta.status = 'emprestada'
-        ferramenta.responsavel_atual = data['responsavel']
-        
-        db.session.add(emprestimo)
         db.session.commit()
         
-        return jsonify(emprestimo.to_dict()), 201
+        return jsonify({
+            'success': True,
+            'message': 'Ferramenta removida com sucesso!'
+        })
     
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>/devolucao', methods=['POST'])
-def devolver_ferramenta(ferramenta_id):
-    try:
-        ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
-
-        if ferramenta.status != 'emprestada':
-            return jsonify({'error': 'Ferramenta não está emprestada'}), 400
-
-        # Encontrar o empréstimo ativo
-        emprestimo = EmprestimoFerramenta.query.filter_by(
-            ferramenta_id=ferramenta_id,
-            status='ativo'
-        ).first()
-
-        if not emprestimo:
-            return jsonify({'error': 'Empréstimo ativo não encontrado'}), 400
-
-        emprestimo.data_devolucao_real = datetime.utcnow()
-        emprestimo.status = 'devolvido'
-
-        ferramenta.status = 'disponivel'
-        ferramenta.responsavel_atual = None
-
-        db.session.commit()
-
-        return jsonify({'message': 'Ferramenta devolvida com sucesso'})
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>/manutencao', methods=['POST'])
-def registrar_manutencao(ferramenta_id):
-    try:
-        ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
-        data = request.get_json()
-        
-        manutencao = ManutencaoFerramenta(
-            ferramenta_id=ferramenta_id,
-            tipo=data['tipo'],
-            descricao=data['descricao'],
-            data_manutencao=datetime.strptime(data['data_manutencao'], '%Y-%m-%d').date(),
-            custo=data.get('custo'),
-            responsavel=data.get('responsavel'),
-            fornecedor_servico=data.get('fornecedor_servico'),
-            observacoes=data.get('observacoes')
-        )
-        
-        # Atualizar dados de manutenção da ferramenta
-        ferramenta.data_ultima_manutencao = manutencao.data_manutencao
-        if ferramenta.intervalo_manutencao_dias:
-            from datetime import timedelta
-            ferramenta.proxima_manutencao = manutencao.data_manutencao + timedelta(days=ferramenta.intervalo_manutencao_dias)
-        
-        db.session.add(manutencao)
-        db.session.commit()
-        
-        return jsonify(manutencao.to_dict()), 201
-    
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @ferramenta_bp.route('/ferramentas/estatisticas', methods=['GET'])
 def get_estatisticas():
@@ -276,18 +208,11 @@ def get_estatisticas():
         emprestadas = Ferramenta.query.filter_by(ativo=True, status='emprestada').count()
         manutencao = Ferramenta.query.filter_by(ativo=True, status='manutencao').count()
         
-        # Ferramentas que precisam de manutenção
-        ferramentas_manutencao = Ferramenta.query.filter(
-            Ferramenta.ativo == True,
-            Ferramenta.proxima_manutencao <= date.today()
-        ).count()
-        
         return jsonify({
             'total': total,
             'disponiveis': disponiveis,
             'emprestadas': emprestadas,
-            'manutencao': manutencao,
-            'precisam_manutencao': ferramentas_manutencao
+            'manutencao': manutencao
         })
     
     except Exception as e:
