@@ -56,8 +56,43 @@ with app.app_context():
 @app.route("/static/uploads/<path:filename>")
 def serve_uploads(filename):
     """Serve uploaded files"""
-    uploads_dir = os.path.join(os.path.dirname(__file__), '..', 'uploads')
+    # Caminho absoluto para o diretório uploads
+    uploads_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
+
+    # Verificar se o arquivo existe
+    file_path = os.path.join(uploads_dir, filename)
+    if not os.path.exists(file_path):
+        # Se o arquivo não existe, retornar erro 404 com resposta JSON
+        from flask import Response
+        response = Response(
+            response=f'{{"error": "Arquivo não encontrado", "filename": "{filename}", "message": "O arquivo solicitado não existe no servidor"}}',
+            status=404,
+            mimetype='application/json'
+        )
+        return response
+
     return send_from_directory(uploads_dir, filename)
+
+@app.route("/api/debug/uploads")
+def debug_uploads():
+    """Debug: listar arquivos no diretório uploads"""
+    try:
+        uploads_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
+
+        if not os.path.exists(uploads_dir):
+            return jsonify({
+                'error': 'Diretório uploads não existe',
+                'path': uploads_dir
+            }), 404
+
+        files = os.listdir(uploads_dir)
+        return jsonify({
+            'uploads_dir': uploads_dir,
+            'files': files,
+            'total': len(files)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route("/")
 def serve(path):

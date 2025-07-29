@@ -469,12 +469,18 @@ def obter_logotipo_empresa():
         
         if config and config.valor:
             logotipo_path = config.valor
-            if os.path.exists(os.path.join('uploads', logotipo_path)):
+            file_path = os.path.join('uploads', logotipo_path)
+            if os.path.exists(file_path):
                 logotipo_info = {
                     'tem_logotipo': True,
                     'url_logotipo': f'/static/uploads/{logotipo_path}',
                     'nome_arquivo': logotipo_path
                 }
+            else:
+                # Arquivo configurado não existe, limpar configuração
+                config.valor = ''
+                config.data_atualizacao = datetime.utcnow()
+                db.session.commit()
         
         return jsonify({
             'success': True,
@@ -586,4 +592,36 @@ def remover_logotipo_empresa():
         
     except Exception as e:
         db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@configuracao_bp.route('/configuracoes/debug/uploads', methods=['GET'])
+def debug_uploads():
+    """Debug: verificar arquivos no diretório uploads"""
+    try:
+        import os
+
+        # Verificar configuração do logotipo
+        config = ConfiguracaoSistema.query.filter_by(chave='logotipo_empresa').first()
+        logotipo_configurado = config.valor if config else None
+
+        # Listar arquivos no diretório uploads
+        uploads_dir = 'uploads'
+        arquivos_existentes = []
+
+        if os.path.exists(uploads_dir):
+            arquivos_existentes = os.listdir(uploads_dir)
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'logotipo_configurado': logotipo_configurado,
+                'url_configurada': f'/static/uploads/{logotipo_configurado}' if logotipo_configurado else None,
+                'diretorio_uploads': uploads_dir,
+                'diretorio_existe': os.path.exists(uploads_dir),
+                'arquivos_existentes': arquivos_existentes,
+                'total_arquivos': len(arquivos_existentes)
+            }
+        })
+
+    except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
