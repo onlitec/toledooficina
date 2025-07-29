@@ -218,3 +218,107 @@ def resumo_financeiro():
         
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@financeiro_bp.route('/financeiro/debug/modelo', methods=['GET'])
+def debug_modelo_financeiro():
+    """Debug: verificar estado do modelo ContaPagar em produção"""
+    try:
+        from sqlalchemy import text
+
+        # Verificar colunas da tabela contas_pagar
+        result = db.session.execute(text('PRAGMA table_info(contas_pagar)'))
+        colunas_pagar = [row[1] for row in result]
+
+        # Verificar colunas da tabela contas_receber
+        result = db.session.execute(text('PRAGMA table_info(contas_receber)'))
+        colunas_receber = [row[1] for row in result]
+
+        # Verificar atributos do modelo ContaPagar
+        atributos_pagar = [attr for attr in dir(ContaPagar) if not attr.startswith('_')]
+
+        # Verificar atributos do modelo ContaReceber
+        atributos_receber = [attr for attr in dir(ContaReceber) if not attr.startswith('_')]
+
+        # Tentar criar instância de teste
+        teste_pagar = None
+        erro_pagar = None
+        try:
+            teste_pagar = ContaPagar(
+                descricao='Teste Debug',
+                valor_original=100.0,
+                data_emissao=db.func.current_date(),
+                data_vencimento=db.func.current_date(),
+                fornecedor='Teste Fornecedor Debug'
+            )
+            teste_pagar = "✅ Instância criada com sucesso"
+        except Exception as e:
+            erro_pagar = str(e)
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'colunas_tabela_pagar': colunas_pagar,
+                'colunas_tabela_receber': colunas_receber,
+                'atributos_modelo_pagar': atributos_pagar,
+                'atributos_modelo_receber': atributos_receber,
+                'teste_instancia_pagar': teste_pagar,
+                'erro_instancia_pagar': erro_pagar,
+                'tem_campo_fornecedor_tabela': 'fornecedor' in colunas_pagar,
+                'tem_campo_fornecedor_modelo': 'fornecedor' in atributos_pagar,
+                'cliente_id_nullable': 'cliente_id' in colunas_receber
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@financeiro_bp.route('/financeiro/debug/recriar-tabelas', methods=['POST'])
+def recriar_tabelas_financeiro():
+    """Debug: forçar recriação das tabelas financeiras em produção"""
+    try:
+        # ATENÇÃO: Esta rota apaga todos os dados das tabelas financeiras!
+        # Só deve ser usada em ambiente de desenvolvimento ou com backup
+
+        # Verificar se é ambiente de desenvolvimento
+        import os
+        if os.environ.get('FLASK_ENV') == 'production':
+            return jsonify({
+                'success': False,
+                'message': 'Operação não permitida em produção. Use com cuidado!'
+            }), 403
+
+        # Recriar apenas as tabelas financeiras
+        from sqlalchemy import text
+
+        # Fazer backup dos dados existentes (se houver)
+        contas_pagar_backup = []
+        contas_receber_backup = []
+
+        try:
+            contas_pagar_backup = [conta.to_dict() for conta in ContaPagar.query.all()]
+            contas_receber_backup = [conta.to_dict() for conta in ContaReceber.query.all()]
+        except:
+            pass  # Ignorar se tabelas não existem
+
+        # Dropar e recriar tabelas
+        db.session.execute(text('DROP TABLE IF EXISTS contas_pagar'))
+        db.session.execute(text('DROP TABLE IF EXISTS contas_receber'))
+        db.session.execute(text('DROP TABLE IF EXISTS pagamentos_recebimentos'))
+        db.session.execute(text('DROP TABLE IF EXISTS fluxo_caixa'))
+
+        # Recriar tabelas com novos campos
+        db.create_all()
+
+        return jsonify({
+            'success': True,
+            'message': 'Tabelas financeiras recriadas com sucesso!',
+            'data': {
+                'contas_pagar_backup': len(contas_pagar_backup),
+                'contas_receber_backup': len(contas_receber_backup),
+                'tabelas_recriadas': ['contas_pagar', 'contas_receber', 'pagamentos_recebimentos', 'fluxo_caixa']
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
