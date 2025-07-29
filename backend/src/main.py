@@ -94,6 +94,44 @@ def debug_uploads():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route("/api/debug/versao")
+def debug_versao():
+    """Debug: verificar versão do código em produção"""
+    try:
+        import datetime
+
+        # Verificar se o campo fornecedor existe no modelo
+        from src.models.financeiro import ContaPagar
+        atributos_modelo = [attr for attr in dir(ContaPagar) if not attr.startswith('_')]
+        tem_campo_fornecedor = 'fornecedor' in atributos_modelo
+
+        # Informações da versão
+        versao_info = {
+            'timestamp_verificacao': datetime.datetime.now().isoformat(),
+            'campo_fornecedor_no_modelo': tem_campo_fornecedor,
+            'atributos_modelo_contapagar': atributos_modelo,
+            'versao_codigo': 'v2025.07.29-financeiro-fix',
+            'commit_esperado': 'ac1024c',
+            'status_deploy': 'Verificando se código foi atualizado...'
+        }
+
+        if tem_campo_fornecedor:
+            versao_info['status_deploy'] = '✅ Código atualizado - Campo fornecedor presente'
+        else:
+            versao_info['status_deploy'] = '❌ Código desatualizado - Campo fornecedor ausente'
+
+        return jsonify({
+            'success': True,
+            'data': versao_info
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'message': 'Erro ao verificar versão - possível problema de deploy'
+        }), 500
+
 @app.route("/")
 def serve(path):
     static_folder_path = app.static_folder
