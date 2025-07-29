@@ -6,7 +6,7 @@ class ContaReceber(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     ordem_servico_id = db.Column(db.Integer, db.ForeignKey('ordens_servico.id'))
-    cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
+    cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=True)
     
     # Dados da conta
     numero_documento = db.Column(db.String(50))
@@ -78,7 +78,8 @@ class ContaPagar(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     fornecedor_id = db.Column(db.Integer, db.ForeignKey('fornecedores.id'))
-    
+    fornecedor = db.Column(db.String(100))  # Nome do fornecedor (alternativa ao fornecedor_id)
+
     # Dados da conta
     numero_documento = db.Column(db.String(50))
     descricao = db.Column(db.String(200), nullable=False)
@@ -125,6 +126,7 @@ class ContaPagar(db.Model):
         return {
             'id': self.id,
             'fornecedor_id': self.fornecedor_id,
+            'fornecedor': self.fornecedor,
             'numero_documento': self.numero_documento,
             'descricao': self.descricao,
             'categoria': self.categoria,
