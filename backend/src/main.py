@@ -100,25 +100,38 @@ def debug_versao():
     try:
         import datetime
 
-        # Verificar se o campo fornecedor existe no modelo
-        from src.models.financeiro import ContaPagar
-        atributos_modelo = [attr for attr in dir(ContaPagar) if not attr.startswith('_')]
-        tem_campo_fornecedor = 'fornecedor' in atributos_modelo
-
-        # Informações da versão
+        # Informações básicas da versão
         versao_info = {
             'timestamp_verificacao': datetime.datetime.now().isoformat(),
-            'campo_fornecedor_no_modelo': tem_campo_fornecedor,
-            'atributos_modelo_contapagar': atributos_modelo,
-            'versao_codigo': 'v2025.07.29-financeiro-fix',
-            'commit_esperado': 'ac1024c',
-            'status_deploy': 'Verificando se código foi atualizado...'
+            'versao_codigo': 'v2025.07.29-financeiro-fix-v2',
+            'commit_esperado': 'ccd1da2',
+            'status_deploy': 'Código atualizado com correção de import',
+            'flask_funcionando': True
         }
 
-        if tem_campo_fornecedor:
-            versao_info['status_deploy'] = '✅ Código atualizado - Campo fornecedor presente'
-        else:
-            versao_info['status_deploy'] = '❌ Código desatualizado - Campo fornecedor ausente'
+        # Tentar verificar o modelo (pode falhar se houver problemas)
+        try:
+            from src.models.financeiro import ContaPagar
+            atributos_modelo = [attr for attr in dir(ContaPagar) if not attr.startswith('_')]
+            tem_campo_fornecedor = 'fornecedor' in atributos_modelo
+
+            versao_info.update({
+                'campo_fornecedor_no_modelo': tem_campo_fornecedor,
+                'atributos_modelo_contapagar': atributos_modelo[:10],  # Apenas primeiros 10
+                'modelo_carregado': True
+            })
+
+            if tem_campo_fornecedor:
+                versao_info['status_deploy'] = '✅ Código atualizado - Campo fornecedor presente'
+            else:
+                versao_info['status_deploy'] = '❌ Código desatualizado - Campo fornecedor ausente'
+
+        except Exception as model_error:
+            versao_info.update({
+                'modelo_carregado': False,
+                'erro_modelo': str(model_error),
+                'status_deploy': '⚠️ Flask funcionando, mas problema com modelo'
+            })
 
         return jsonify({
             'success': True,
@@ -129,8 +142,17 @@ def debug_versao():
         return jsonify({
             'success': False,
             'error': str(e),
-            'message': 'Erro ao verificar versão - possível problema de deploy'
+            'message': 'Erro crítico na rota de debug'
         }), 500
+
+@app.route("/api/health")
+def health_check():
+    """Health check simples para verificar se Flask está funcionando"""
+    return jsonify({
+        'status': 'healthy',
+        'message': 'Backend Flask funcionando',
+        'timestamp': '2025-07-29T01:55:00'
+    })
 
 @app.route("/")
 def serve(path):
