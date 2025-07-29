@@ -57,7 +57,7 @@ class Peca(db.Model):
     __tablename__ = 'pecas'
     
     id = db.Column(db.Integer, primary_key=True)
-    codigo = db.Column(db.String(50), unique=True, nullable=False)
+    codigo = db.Column(db.String(50), unique=True, nullable=True)  # Permitir null temporariamente para gerar código
     nome = db.Column(db.String(100), nullable=False)
     descricao = db.Column(db.Text)
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'))
@@ -89,7 +89,7 @@ class Peca(db.Model):
     
     # Relacionamentos
     movimentacoes = db.relationship('MovimentacaoEstoque', backref='peca', lazy=True)
-    itens_ordem = db.relationship('ItemOrdemServico', backref='peca', lazy=True)
+    # itens_ordem = db.relationship('ItemOrdemServico', backref='peca', lazy=True)  # Temporariamente comentado
     
     def __repr__(self):
         return f'<Peca {self.codigo} - {self.nome}>'

@@ -7,6 +7,7 @@ import { Dashboard } from '@/components/pages/Dashboard'
 import { Clientes } from '@/components/pages/Clientes'
 import { Veiculos } from '@/components/pages/Veiculos'
 import { Estoque } from '@/components/pages/Estoque'
+import { Categorias } from '@/components/pages/Categorias'
 import { Ferramentas } from '@/components/pages/Ferramentas'
 import { OrdensServico } from '@/components/pages/OrdensServico'
 import { Financeiro } from '@/components/pages/Financeiro'
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/clientes" element={<Clientes />} />
                 <Route path="/veiculos" element={<Veiculos />} />
                 <Route path="/estoque" element={<Estoque />} />
+                <Route path="/categorias" element={<Categorias />} />
                 <Route path="/ferramentas" element={<Ferramentas />} />
                 <Route path="/ordens-servico" element={<OrdensServico />} />
                 <Route path="/financeiro" element={<Financeiro />} />

@@ -138,10 +138,7 @@ export function Ferramentas() {
         return
       }
 
-      if (!ferramentaData.codigo.trim()) {
-        alert('Código da ferramenta é obrigatório')
-        return
-      }
+      // Código não é mais obrigatório - será gerado automaticamente se vazio
 
       const url = editingFerramenta?.id
         ? `/api/ferramentas/${editingFerramenta.id}`
@@ -337,14 +334,14 @@ export function Ferramentas() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Código *
+                  Código
                 </label>
                 <input
                   type="text"
                   value={ferramentaData.codigo}
                   onChange={(e) => handleFerramentaChange('codigo', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Código da ferramenta"
+                  placeholder="Deixe vazio para gerar automaticamente (FER-0001)"
                 />
               </div>
 

@@ -5,7 +5,11 @@ from src.models.ferramenta import Ferramenta, EmprestimoFerramenta, ManutencaoFe
 
 ferramenta_bp = Blueprint('ferramenta', __name__)
 
-@ferramenta_bp.route('/api/ferramentas', methods=['GET'])
+@ferramenta_bp.route('/ferramentas/teste', methods=['GET'])
+def teste_ferramenta():
+    return jsonify({'message': 'Rota de teste funcionando!'})
+
+@ferramenta_bp.route('/ferramentas', methods=['GET'])
 def get_ferramentas():
     try:
         search = request.args.get('search', '')
@@ -32,19 +36,33 @@ def get_ferramentas():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@ferramenta_bp.route('/api/ferramentas', methods=['POST'])
+@ferramenta_bp.route('/ferramentas', methods=['POST'])
 def create_ferramenta():
     try:
         data = request.get_json()
-        
-        # Verificar se o código já existe
-        if data.get('codigo'):
-            existing = Ferramenta.query.filter_by(codigo=data['codigo']).first()
+
+        # Gerar código automaticamente se não fornecido
+        codigo = data.get('codigo')
+        if not codigo or codigo.strip() == '':
+            # Buscar o último código FER-XXXX
+            ultima_ferramenta = Ferramenta.query.filter(Ferramenta.codigo.like('FER-%')).order_by(Ferramenta.codigo.desc()).first()
+            if ultima_ferramenta:
+                try:
+                    ultimo_numero = int(ultima_ferramenta.codigo.split('-')[1])
+                    proximo_numero = ultimo_numero + 1
+                except (ValueError, IndexError):
+                    proximo_numero = 1
+            else:
+                proximo_numero = 1
+            codigo = f'FER-{proximo_numero:04d}'
+        else:
+            # Verificar se o código já existe (apenas se foi fornecido)
+            existing = Ferramenta.query.filter_by(codigo=codigo).first()
             if existing:
                 return jsonify({'error': 'Código já existe'}), 400
-        
+
         ferramenta = Ferramenta(
-            codigo=data.get('codigo'),
+            codigo=codigo,
             nome=data['nome'],
             descricao=data.get('descricao'),
             marca=data.get('marca'),
@@ -68,16 +86,16 @@ def create_ferramenta():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@ferramenta_bp.route('/api/ferramentas/<int:ferramenta_id>', methods=['GET'])
+@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>', methods=['GET'])
 def get_ferramenta(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
         return jsonify(ferramenta.to_dict())
-    
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@ferramenta_bp.route('/api/ferramentas/<int:ferramenta_id>', methods=['PUT'])
+@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>', methods=['PUT'])
 def update_ferramenta(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
@@ -116,22 +134,22 @@ def update_ferramenta(ferramenta_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@ferramenta_bp.route('/api/ferramentas/<int:ferramenta_id>', methods=['DELETE'])
+@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>', methods=['DELETE'])
 def delete_ferramenta(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
         ferramenta.ativo = False
         ferramenta.data_atualizacao = datetime.utcnow()
-        
+
         db.session.commit()
-        
+
         return jsonify({'message': 'Ferramenta removida com sucesso'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@ferramenta_bp.route('/api/ferramentas/<int:ferramenta_id>/emprestimo', methods=['POST'])
+@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>/emprestimo', methods=['POST'])
 def emprestar_ferramenta(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
@@ -159,38 +177,38 @@ def emprestar_ferramenta(ferramenta_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@ferramenta_bp.route('/api/ferramentas/<int:ferramenta_id>/devolucao', methods=['POST'])
+@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>/devolucao', methods=['POST'])
 def devolver_ferramenta(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
-        
+
         if ferramenta.status != 'emprestada':
             return jsonify({'error': 'Ferramenta não está emprestada'}), 400
-        
+
         # Encontrar o empréstimo ativo
         emprestimo = EmprestimoFerramenta.query.filter_by(
             ferramenta_id=ferramenta_id,
             status='ativo'
         ).first()
-        
+
         if not emprestimo:
             return jsonify({'error': 'Empréstimo ativo não encontrado'}), 400
-        
+
         emprestimo.data_devolucao_real = datetime.utcnow()
         emprestimo.status = 'devolvido'
-        
+
         ferramenta.status = 'disponivel'
         ferramenta.responsavel_atual = None
-        
+
         db.session.commit()
-        
+
         return jsonify({'message': 'Ferramenta devolvida com sucesso'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@ferramenta_bp.route('/api/ferramentas/<int:ferramenta_id>/manutencao', methods=['POST'])
+@ferramenta_bp.route('/ferramentas/<int:ferramenta_id>/manutencao', methods=['POST'])
 def registrar_manutencao(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
@@ -222,7 +240,7 @@ def registrar_manutencao(ferramenta_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@ferramenta_bp.route('/api/ferramentas/estatisticas', methods=['GET'])
+@ferramenta_bp.route('/ferramentas/estatisticas', methods=['GET'])
 def get_estatisticas():
     try:
         total = Ferramenta.query.filter_by(ativo=True).count()

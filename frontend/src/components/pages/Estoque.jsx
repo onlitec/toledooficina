@@ -200,10 +200,7 @@ export function Estoque() {
         return
       }
 
-      if (!pecaData.codigo.trim()) {
-        alert('Código da peça é obrigatório')
-        return
-      }
+      // Código não é mais obrigatório - será gerado automaticamente se vazio
 
       const url = editingPeca?.id
         ? `/api/pecas/${editingPeca.id}`
@@ -211,12 +208,21 @@ export function Estoque() {
 
       const method = editingPeca?.id ? 'PUT' : 'POST'
 
+      // Converter os dados para o formato esperado pelo backend
+      const dataToSend = {
+        ...pecaData,
+        quantidade_atual: parseInt(pecaData.estoque_atual) || 0,
+        quantidade_minima: parseInt(pecaData.estoque_minimo) || 0,
+        preco_custo: parseFloat(pecaData.preco_custo) || 0,
+        preco_venda: parseFloat(pecaData.preco_venda) || 0
+      }
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(pecaData)
+        body: JSON.stringify(dataToSend)
       })
 
       const result = await response.json()
@@ -335,7 +341,7 @@ export function Estoque() {
                   value={pecaData.codigo}
                   onChange={(e) => handlePecaChange('codigo', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Código da peça"
+                  placeholder="Deixe vazio para gerar automaticamente (CP-0001)"
                 />
               </div>
 
