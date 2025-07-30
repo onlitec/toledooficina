@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
+from sqlalchemy import func
 from src.models import db
 from src.models.user import User
 from src.schemas.user_schemas import LoginSchema, ChangePasswordSchema, RefreshTokenSchema, ForgotPasswordSchema, ResetPasswordSchema
@@ -15,7 +16,7 @@ auth_bp = Blueprint('auth', __name__)
 logger = logging.getLogger(__name__)
 
 @auth_bp.route('/auth/login', methods=['POST'])
-@rate_limit(max_requests=5, window_seconds=300)  # 5 tentativas por 5 minutos
+@rate_limit(max_requests=50, window_seconds=300)  # 50 tentativas por 5 minutos (temporariamente aumentado para depuração)
 def login():
     """Endpoint de login com rate limiting e validações"""
     try:
@@ -23,13 +24,13 @@ def login():
         schema = LoginSchema()
         data = schema.load(request.get_json())
         
-        username = data['username'].strip().lower()
+        username = data['username'].strip()
         password = data['password']
         remember_me = data.get('remember_me', False)
         
-        # Buscar usuário
+        # Buscar usuário (case-insensitive)
         user = User.query.filter(
-            (User.username == username) | (User.email == username)
+            (func.lower(User.username) == func.lower(username)) | (func.lower(User.email) == func.lower(username))
         ).first()
         
         if not user:
@@ -43,14 +44,17 @@ def login():
         if user.is_account_locked():
             logger.warning(f'Tentativa de login em conta bloqueada: {username}')
             return jsonify({
-                'success': False,
-                'message': 'Conta temporariamente bloqueada devido a múltiplas tentativas de login falhadas'
-            }), 423
+                'success': False, 
+                'message': 'Credenciais inválidas'
+            }), 401
         
         # Verificar senha
+        logger.debug(f"Verificando senha para o usuário: {user.username}")
+        logger.debug(f"Hash do banco de dados: {user.password_hash}")
+        
         if not user.check_password(password):
             user.increment_failed_login()
-            logger.warning(f'Tentativa de login com senha incorreta: {username}')
+            logger.warning(f'Tentativa de login com senha incorreta para o usuário: {username}')
             return jsonify({
                 'success': False,
                 'message': 'Credenciais inválidas'
@@ -75,11 +79,9 @@ def login():
             'success': True,
             'message': 'Login realizado com sucesso',
             'access_token': access_token,
+            'refresh_token': refresh_token if remember_me else None,
             'user': user.to_dict()
         }
-        
-        if remember_me:
-            response_data['refresh_token'] = refresh_token
         
         return jsonify(response_data), 200
         

@@ -17,25 +17,24 @@ RUN pnpm install
 # Copy source code
 COPY . .
 
-# Build the application
 RUN pnpm run build
 
-# Production stage with Nginx
+# Etapa 2: Servir com Nginx
 FROM nginx:alpine
 
-# Copy built files from builder stage
+# Copiar build da etapa anterior
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom nginx configuration
+# Copiar configuração do Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
+# Expor a porta 80
 EXPOSE 80
 
-# Health check
+# Healthcheck para verificar se o Nginx está rodando
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
-# Start nginx
+# Comando para iniciar o Nginx
 CMD ["nginx", "-g", "daemon off;"]
 

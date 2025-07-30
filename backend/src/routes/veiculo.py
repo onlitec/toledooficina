@@ -5,6 +5,7 @@ from src.models.veiculo import Veiculo
 from src.models.cliente import Cliente
 import os
 from werkzeug.utils import secure_filename
+from sqlalchemy.orm.attributes import flag_modified
 
 veiculo_bp = Blueprint('veiculo', __name__)
 
@@ -69,6 +70,15 @@ def criar_veiculo():
         if veiculo_existente:
             return jsonify({'success': False, 'message': 'Placa ja cadastrada'}), 400
         
+        # Tratar chassi vazio como NULL e verificar duplicatas
+        chassi = data.get('chassi')
+        if chassi and chassi.strip():  # Se chassi não está vazio
+            chassi_existente = Veiculo.query.filter_by(chassi=chassi.strip()).first()
+            if chassi_existente:
+                return jsonify({'success': False, 'message': 'Chassi ja cadastrado'}), 400
+        else:
+            chassi = None  # Converter string vazia para NULL
+        
         veiculo = Veiculo(
             cliente_id=data['cliente_id'],
             marca=data['marca'],
@@ -77,7 +87,7 @@ def criar_veiculo():
             ano_modelo=data.get('ano_modelo'),
             cor=data.get('cor'),
             placa=data['placa'],
-            chassi=data.get('chassi'),
+            chassi=chassi,
             renavam=data.get('renavam'),
             combustivel=data.get('combustivel'),
             motor=data.get('motor'),
@@ -147,6 +157,8 @@ def upload_foto_veiculo(veiculo_id):
             veiculo.fotos = []
         
         veiculo.fotos.append(unique_filename)
+        # Marcar o campo JSON como modificado para o SQLAlchemy detectar a mudança
+        flag_modified(veiculo, 'fotos')
         veiculo.data_atualizacao = datetime.utcnow()
         db.session.commit()
         
@@ -185,6 +197,8 @@ def remover_foto_veiculo(veiculo_id, nome_foto):
         
         # Remover da lista de fotos do veículo
         veiculo.fotos.remove(nome_foto)
+        # Marcar o campo JSON como modificado para o SQLAlchemy detectar a mudança
+        flag_modified(veiculo, 'fotos')
         veiculo.data_atualizacao = datetime.utcnow()
         db.session.commit()
         
@@ -195,6 +209,30 @@ def remover_foto_veiculo(veiculo_id, nome_foto):
         
     except Exception as e:
         db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@veiculo_bp.route('/veiculos/<int:veiculo_id>', methods=['GET'])
+def obter_veiculo(veiculo_id):
+    """Obter um veículo específico por ID"""
+    try:
+        veiculo = Veiculo.query.get(veiculo_id)
+        if not veiculo:
+            return jsonify({'success': False, 'message': 'Veiculo nao encontrado'}), 404
+        
+        # Obter dados do cliente
+        cliente = Cliente.query.get(veiculo.cliente_id)
+        veiculo_dict = veiculo.to_dict()
+        if cliente:
+            veiculo_dict['cliente_nome'] = cliente.nome
+            veiculo_dict['cliente_telefone'] = cliente.telefone
+            veiculo_dict['cliente_email'] = cliente.email
+        
+        return jsonify({
+            'success': True,
+            'data': veiculo_dict
+        })
+        
+    except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @veiculo_bp.route('/veiculos/<int:veiculo_id>', methods=['PUT'])
@@ -226,7 +264,15 @@ def atualizar_veiculo(veiculo_id):
         if 'placa' in data:
             veiculo.placa = data['placa']
         if 'chassi' in data:
-            veiculo.chassi = data['chassi']
+            chassi = data['chassi']
+            if chassi and chassi.strip():  # Se chassi não está vazio
+                # Verificar se chassi já existe (exceto para o próprio veículo)
+                chassi_existente = Veiculo.query.filter_by(chassi=chassi.strip()).first()
+                if chassi_existente and chassi_existente.id != veiculo.id:
+                    return jsonify({'success': False, 'message': 'Chassi ja cadastrado'}), 400
+                veiculo.chassi = chassi.strip()
+            else:
+                veiculo.chassi = None  # Converter string vazia para NULL
         if 'renavam' in data:
             veiculo.renavam = data['renavam']
         if 'combustivel' in data:

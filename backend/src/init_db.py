@@ -31,7 +31,11 @@ def create_app():
         app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
     
     # Configuração do banco de dados
-    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
+    db_user = os.environ.get('POSTGRES_USER')
+    db_password = os.environ.get('POSTGRES_PASSWORD')
+    db_host = os.environ.get('POSTGRES_HOST')
+    db_name = os.environ.get('POSTGRES_DB')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_user}:{db_password}@{db_host}/{db_name}'
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
     db.init_app(app)
@@ -46,11 +50,11 @@ def init_database():
         db.create_all()
         
         # Verificar se já existe usuário admin
-        admin_user = User.query.filter_by(username='admin').first()
+        admin_user = User.query.filter_by(username='Admin').first()
         if not admin_user:
             print("👤 Criando usuário administrador padrão...")
             admin_user = User(
-                username='admin',
+                username='Admin',
                 email='admin@oficina.com',
                 nome_completo='Administrador do Sistema',
                 role='admin',
@@ -58,9 +62,11 @@ def init_database():
             )
             admin_user.set_password('admin123')  # Senha padrão - DEVE SER ALTERADA
             db.session.add(admin_user)
-            print("   ✅ Usuário admin criado (username: admin, senha: admin123)")
+            print("   ✅ Usuário admin criado (username: Admin, senha: admin123)")
         else:
-            print("   ℹ️ Usuário admin já existe")
+            print("   ℹ️ Usuário admin já existe, atualizando senha para o padrão...")
+            admin_user.set_password('admin123')
+            db.session.add(admin_user)
         
         # Criar usuário de teste
         test_user = User.query.filter_by(username='user').first()
@@ -140,10 +146,12 @@ def init_database():
                 print(f"   ✅ Tipo de serviço '{nome}' criado")
         
         try:
+            print("💾 Tentando fazer o commit das alterações no banco de dados...")
             db.session.commit()
+            print("   ✅ Commit realizado com sucesso!")
             print("\n🎉 Banco de dados inicializado com sucesso!")
             print("\n📋 INFORMAÇÕES IMPORTANTES:")
-            print("   👤 Usuário Admin: admin / admin123")
+            print("   👤 Usuário Admin: Admin / admin123")
             print("   👤 Usuário Teste: user / user123")
             print("   ⚠️  ALTERE AS SENHAS PADRÃO IMEDIATAMENTE!")
             print("\n🚀 Sistema pronto para uso!")

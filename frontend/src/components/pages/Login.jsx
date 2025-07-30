@@ -214,10 +214,10 @@ export function Login() {
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  onClick={() => handleDemoLogin('admin', 'admin123')}
+                  onClick={() => handleDemoLogin('Admin', 'admin123')}
                   disabled={loading}
                 >
-                  🔑 Admin (admin / admin123)
+                  🔑 Admin (Admin / admin123)
                 </Button>
                 <Button
                   variant="outline"

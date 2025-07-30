@@ -44,14 +44,23 @@ export function OrdensServico() {
   }
 
   const loadVeiculos = async (clienteId) => {
+    // Validar se clienteId é válido antes de fazer a chamada
+    if (!clienteId || clienteId === '' || clienteId === null || clienteId === undefined) {
+      setVeiculos([])
+      return
+    }
+    
     try {
       const response = await fetch(`/api/veiculos?cliente_id=${clienteId}`)
       const result = await response.json()
       if (result.success) {
         setVeiculos(result.data)
+      } else {
+        setVeiculos([])
       }
     } catch (error) {
       console.error('Erro ao carregar veículos:', error)
+      setVeiculos([])
     }
   }
 

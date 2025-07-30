@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.models import db
+from . import db
 
 class Categoria(db.Model):
     __tablename__ = 'categorias'
@@ -139,7 +139,7 @@ class MovimentacaoEstoque(db.Model):
     quantidade_atual = db.Column(db.Integer, nullable=False)
     motivo = db.Column(db.String(100))
     observacoes = db.Column(db.Text)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
     # Timestamps
     data_movimentacao = db.Column(db.DateTime, default=datetime.utcnow)

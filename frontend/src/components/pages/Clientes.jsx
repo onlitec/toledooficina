@@ -108,7 +108,25 @@ export function Clientes() {
 
   const handleEditarCliente = (cliente) => {
     setEditingCliente(cliente)
-    setClienteData(cliente)
+    // Garantir que todos os campos tenham valores string para evitar warnings do React
+    setClienteData({
+      nome: cliente.nome || '',
+      tipo_pessoa: cliente.tipo_pessoa || 'fisica',
+      cpf_cnpj: cliente.cpf_cnpj || '',
+      rg_ie: cliente.rg_ie || '',
+      telefone: cliente.telefone || '',
+      celular: cliente.celular || '',
+      email: cliente.email || '',
+      endereco: cliente.endereco || '',
+      numero: cliente.numero || '',
+      complemento: cliente.complemento || '',
+      bairro: cliente.bairro || '',
+      cidade: cliente.cidade || '',
+      estado: cliente.estado || '',
+      cep: cliente.cep || '',
+      data_nascimento: cliente.data_nascimento || '',
+      observacoes: cliente.observacoes || ''
+    })
     setShowForm(true)
   }
 
@@ -228,6 +246,32 @@ export function Clientes() {
     return fotosPreviews.filter(foto => foto.veiculoIndex === veiculoIndex)
   }
 
+  const uploadFotosVeiculos = async (veiculosCriados) => {
+    // Fazer upload das fotos para cada veículo criado
+    for (let i = 0; i < veiculosCriados.length; i++) {
+      const veiculo = veiculosCriados[i]
+      const fotosVeiculo = fotosPreviews.filter(foto => foto.veiculoIndex === i && foto.file)
+      
+      for (const foto of fotosVeiculo) {
+        const formData = new FormData()
+        formData.append('foto', foto.file)
+        
+        try {
+          const response = await fetch(`/api/veiculos/${veiculo.id}/fotos`, {
+            method: 'POST',
+            body: formData
+          })
+          const result = await response.json()
+          if (!result.success) {
+            console.error('Erro ao fazer upload da foto:', result.message)
+          }
+        } catch (error) {
+          console.error('Erro ao fazer upload da foto:', error)
+        }
+      }
+    }
+  }
+
   const salvarCliente = async () => {
     try {
       setLoading(true)
@@ -285,6 +329,11 @@ export function Clientes() {
         const result = await response.json()
 
         if (result.success) {
+          // Fazer upload das fotos dos veículos criados
+          if (result.data.veiculos && result.data.veiculos.length > 0) {
+            await uploadFotosVeiculos(result.data.veiculos)
+          }
+          
           alert(result.message || "Cliente cadastrado com sucesso!")
           setShowForm(false)
           carregarClientes()
@@ -658,6 +707,32 @@ export function Clientes() {
                         onChange={(e) => handleVeiculoChange(index, 'cor', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Branco, Preto, etc."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Chassi
+                      </label>
+                      <input
+                        type="text"
+                        value={veiculo.chassi}
+                        onChange={(e) => handleVeiculoChange(index, 'chassi', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="9BWZZZ377VT004251"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Renavam
+                      </label>
+                      <input
+                        type="text"
+                        value={veiculo.renavam}
+                        onChange={(e) => handleVeiculoChange(index, 'renavam', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="12345678901"
                       />
                     </div>
                   </div>

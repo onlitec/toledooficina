@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from src.models import db
 from src.models.configuracao import ConfiguracaoEmpresa, ConfiguracaoEmail, ConfiguracaoNotificacao, ConfiguracaoSistema
+from src.auth import token_required
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -393,6 +394,7 @@ def info_sistema():
 
 
 @configuracao_bp.route('/configuracoes/sistema/titulo', methods=['GET'])
+@token_required
 def obter_titulo_empresa():
     """Obtém o título da empresa"""
     try:
@@ -456,6 +458,7 @@ def atualizar_titulo_empresa():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @configuracao_bp.route('/configuracoes/sistema/logotipo', methods=['GET'])
+@token_required
 def obter_logotipo_empresa():
     """Obtém informações do logotipo da empresa"""
     try:

@@ -38,7 +38,27 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
   useEffect(() => {
     carregarClientes()
     if (veiculo) {
-      setVeiculoData(veiculo)
+      // Garantir que todos os campos tenham valores string para evitar warnings do React
+      setVeiculoData({
+        cliente_id: veiculo.cliente_id || '',
+        marca: veiculo.marca || '',
+        modelo: veiculo.modelo || '',
+        ano_fabricacao: veiculo.ano_fabricacao || '',
+        ano_modelo: veiculo.ano_modelo || '',
+        cor: veiculo.cor || '',
+        placa: veiculo.placa || '',
+        chassi: veiculo.chassi || '',
+        renavam: veiculo.renavam || '',
+        combustivel: veiculo.combustivel || 'gasolina',
+        motor: veiculo.motor || '',
+        cambio: veiculo.cambio || 'manual',
+        quilometragem: veiculo.quilometragem || '',
+        vencimento_ipva: veiculo.vencimento_ipva || '',
+        vencimento_seguro: veiculo.vencimento_seguro || '',
+        vencimento_licenciamento: veiculo.vencimento_licenciamento || '',
+        observacoes: veiculo.observacoes || '',
+        fotos: veiculo.fotos || []
+      })
       // Carregar previews das fotos existentes
       if (veiculo.fotos && veiculo.fotos.length > 0) {
         const previews = veiculo.fotos.map(foto => ({
@@ -284,6 +304,19 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
                   onChange={(e) => handleChange('placa', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="ABC-1234"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Chassi
+                </label>
+                <input
+                  type="text"
+                  value={veiculoData.chassi}
+                  onChange={(e) => handleChange('chassi', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="9BWZZZ377VT004251"
                 />
               </div>
 

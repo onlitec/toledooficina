@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from src.models import db
 from src.models.veiculo import Veiculo
 from src.models.cliente import Cliente
@@ -69,8 +69,8 @@ def criar_cliente():
         if not data.get('cpf_cnpj'):
             return jsonify({'success': False, 'message': 'CPF/CNPJ é obrigatório'}), 400
         
-        # Verificar se CPF/CNPJ já existe
-        cliente_existente = Cliente.query.filter_by(cpf_cnpj=data['cpf_cnpj']).first()
+        # Verificar se CPF/CNPJ já existe entre clientes ativos
+        cliente_existente = Cliente.query.filter_by(cpf_cnpj=data['cpf_cnpj'], ativo=True).first()
         if cliente_existente:
             return jsonify({'success': False, 'message': 'CPF/CNPJ já cadastrado'}), 400
         
@@ -201,8 +201,8 @@ def criar_cliente_com_veiculos():
             if not data.get(field):
                 return jsonify({'success': False, 'message': f'Campo {field} é obrigatório'}), 400
         
-        # Verificar se CPF/CNPJ já existe
-        cliente_existente = Cliente.query.filter_by(cpf_cnpj=data['cpf_cnpj']).first()
+        # Verificar se CPF/CNPJ já existe entre clientes ativos
+        cliente_existente = Cliente.query.filter_by(cpf_cnpj=data['cpf_cnpj'], ativo=True).first()
         if cliente_existente:
             return jsonify({'success': False, 'message': 'CPF/CNPJ já cadastrado'}), 400
         
@@ -245,6 +245,15 @@ def criar_cliente_com_veiculos():
                 if veiculo_existente:
                     return jsonify({'success': False, 'message': f'Placa {veiculo_data["placa"]} já cadastrada'}), 400
                 
+                # Tratar chassi vazio como NULL e verificar duplicatas
+                chassi = veiculo_data.get('chassi')
+                if chassi and chassi.strip():  # Se chassi não está vazio
+                    chassi_existente = Veiculo.query.filter_by(chassi=chassi.strip()).first()
+                    if chassi_existente:
+                        return jsonify({'success': False, 'message': f'Chassi {chassi.strip()} já cadastrado'}), 400
+                else:
+                    chassi = None  # Converter string vazia para NULL
+                
                 veiculo = Veiculo(
                     cliente_id=cliente.id,
                     marca=veiculo_data['marca'],
@@ -253,7 +262,7 @@ def criar_cliente_com_veiculos():
                     ano_modelo=veiculo_data.get('ano_modelo'),
                     cor=veiculo_data.get('cor'),
                     placa=veiculo_data['placa'],
-                    chassi=veiculo_data.get('chassi'),
+                    chassi=chassi,
                     renavam=veiculo_data.get('renavam'),
                     combustivel=veiculo_data.get('combustivel'),
                     motor=veiculo_data.get('motor'),
@@ -287,4 +296,7 @@ def criar_cliente_com_veiculos():
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'message': f'Erro ao criar cliente: {str(e)}'
+        }), 500

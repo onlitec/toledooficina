@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import jwt
 import bcrypt
-from src.models import db
+from . import db
 from flask import current_app
 
 class User(db.Model):

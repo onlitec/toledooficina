@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.models import db
+from . import db
 
 class ConfiguracaoEmpresa(db.Model):
     __tablename__ = 'configuracao_empresa'

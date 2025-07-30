@@ -1,0 +1,16 @@
+{
+  "cliente_id": 2,
+  "marca": "FIAT",
+  "modelo": "UNO",
+  "ano_fabricacao": 2020,
+  "ano_modelo": 2020,
+  "cor": "Branco",
+  "placa": "DEF-4567",
+  "chassi": "",
+  "renavam": "12345678901",
+  "combustivel": "flex",
+  "motor": "1.0",
+  "cambio": "manual",
+  "quilometragem": 15000,
+  "observacoes": "Veículo em bom estado"
+}

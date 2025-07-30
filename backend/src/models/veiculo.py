@@ -1,5 +1,5 @@
 from datetime import datetime
-from src.models import db
+from . import db
 
 class Veiculo(db.Model):
     __tablename__ = 'veiculos'
@@ -72,28 +72,3 @@ class Veiculo(db.Model):
     
     def __repr__(self):
         return f'<Veiculo {self.marca} {self.modelo} - {self.placa}>'
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'cliente_id': self.cliente_id,
-            'marca': self.marca,
-            'modelo': self.modelo,
-            'ano_fabricacao': self.ano_fabricacao,
-            'ano_modelo': self.ano_modelo,
-            'cor': self.cor,
-            'placa': self.placa,
-            'chassi': self.chassi,
-            'renavam': self.renavam,
-            'combustivel': self.combustivel,
-            'motor': self.motor,
-            'cambio': self.cambio,
-            'quilometragem': self.quilometragem,
-            'vencimento_ipva': self.vencimento_ipva.isoformat() if self.vencimento_ipva else None,
-            'vencimento_seguro': self.vencimento_seguro.isoformat() if self.vencimento_seguro else None,
-            'vencimento_licenciamento': self.vencimento_licenciamento.isoformat() if self.vencimento_licenciamento else None,
-            'observacoes': self.observacoes,
-            'ativo': self.ativo,
-            'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None,
-            'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
-        }

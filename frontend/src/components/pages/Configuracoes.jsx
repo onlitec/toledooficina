@@ -70,7 +70,26 @@ export function Configuracoes() {
       if (empresaResponse.ok) {
         const empresaResult = await empresaResponse.json()
         if (empresaResult.success) {
-          setEmpresaData(empresaResult.data)
+          // Garantir que todos os campos tenham valores string para evitar warnings do React
+          setEmpresaData({
+            razao_social: empresaResult.data.razao_social || '',
+            nome_fantasia: empresaResult.data.nome_fantasia || '',
+            cnpj: empresaResult.data.cnpj || '',
+            inscricao_estadual: empresaResult.data.inscricao_estadual || '',
+            inscricao_municipal: empresaResult.data.inscricao_municipal || '',
+            telefone: empresaResult.data.telefone || '',
+            celular: empresaResult.data.celular || '',
+            email: empresaResult.data.email || '',
+            site: empresaResult.data.site || '',
+            endereco: empresaResult.data.endereco || '',
+            numero: empresaResult.data.numero || '',
+            complemento: empresaResult.data.complemento || '',
+            bairro: empresaResult.data.bairro || '',
+            cidade: empresaResult.data.cidade || '',
+            estado: empresaResult.data.estado || '',
+            cep: empresaResult.data.cep || '',
+            logotipo_path: empresaResult.data.logotipo_path || ''
+          })
         }
       }
 
@@ -79,7 +98,16 @@ export function Configuracoes() {
       if (emailResponse.ok) {
         const emailResult = await emailResponse.json()
         if (emailResult.success) {
-          setEmailData(emailResult.data)
+          // Garantir que todos os campos tenham valores apropriados para evitar warnings do React
+          setEmailData({
+            servidor_smtp: emailResult.data.servidor_smtp || '',
+            porta_smtp: emailResult.data.porta_smtp || 587,
+            usuario_email: emailResult.data.usuario_email || '',
+            senha_email: emailResult.data.senha_email || '',
+            usar_tls: emailResult.data.usar_tls !== undefined ? emailResult.data.usar_tls : true,
+            email_remetente: emailResult.data.email_remetente || '',
+            nome_remetente: emailResult.data.nome_remetente || ''
+          })
         }
       }
 
