@@ -97,6 +97,62 @@ def criar_veiculo():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@veiculo_bp.route('/veiculos/<int:veiculo_id>', methods=['PUT'])
+def atualizar_veiculo(veiculo_id):
+    try:
+        veiculo = Veiculo.query.get(veiculo_id)
+        if not veiculo:
+            return jsonify({'success': False, 'message': 'Veiculo nao encontrado'}), 404
+        
+        data = request.get_json()
+        
+        # Verificar se a placa já existe (exceto para o próprio veículo)
+        if data.get('placa') and data['placa'] != veiculo.placa:
+            veiculo_existente = Veiculo.query.filter_by(placa=data['placa']).first()
+            if veiculo_existente:
+                return jsonify({'success': False, 'message': 'Placa ja cadastrada'}), 400
+        
+        # Atualizar campos
+        if 'marca' in data:
+            veiculo.marca = data['marca']
+        if 'modelo' in data:
+            veiculo.modelo = data['modelo']
+        if 'ano_fabricacao' in data:
+            veiculo.ano_fabricacao = data['ano_fabricacao']
+        if 'ano_modelo' in data:
+            veiculo.ano_modelo = data['ano_modelo']
+        if 'cor' in data:
+            veiculo.cor = data['cor']
+        if 'placa' in data:
+            veiculo.placa = data['placa']
+        if 'chassi' in data:
+            veiculo.chassi = data['chassi']
+        if 'renavam' in data:
+            veiculo.renavam = data['renavam']
+        if 'combustivel' in data:
+            veiculo.combustivel = data['combustivel']
+        if 'motor' in data:
+            veiculo.motor = data['motor']
+        if 'cambio' in data:
+            veiculo.cambio = data['cambio']
+        if 'quilometragem' in data:
+            veiculo.quilometragem = data['quilometragem']
+        if 'observacoes' in data:
+            veiculo.observacoes = data['observacoes']
+        
+        veiculo.data_atualizacao = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Veiculo atualizado com sucesso',
+            'data': veiculo.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @veiculo_bp.route('/veiculos/<int:veiculo_id>', methods=['DELETE'])
 def excluir_veiculo(veiculo_id):
     try:

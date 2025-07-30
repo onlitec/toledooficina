@@ -139,7 +139,7 @@ class MovimentacaoEstoque(db.Model):
     quantidade_atual = db.Column(db.Integer, nullable=False)
     motivo = db.Column(db.String(100))
     observacoes = db.Column(db.Text)
-    usuario_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    usuario_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Timestamps
     data_movimentacao = db.Column(db.DateTime, default=datetime.utcnow)

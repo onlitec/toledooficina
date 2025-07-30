@@ -15,6 +15,8 @@ from src.routes.estoque import estoque_bp
 from src.routes.ferramenta import ferramenta_bp
 from src.routes.ordem_servico import ordem_servico_bp
 from src.routes.financeiro import financeiro_bp
+from src.security import security_headers, SecurityMiddleware
+from src.routes.auth import auth_bp
 
 # Importar todos os modelos para criar as tabelas
 from src.models.cliente import Cliente
@@ -50,6 +52,10 @@ app.register_blueprint(financeiro_bp, url_prefix="/api")
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
+
+# Inicializar middleware de segurança
+security_middleware = SecurityMiddleware(app)
+
 with app.app_context():
     db.create_all()
 
@@ -169,6 +175,14 @@ def serve(path):
         else:
             return "index.html not found", 404
 
+
+# Registrar blueprint de autenticação
+app.register_blueprint(auth_bp, url_prefix='/api')
+
+# Aplicar headers de segurança
+@app.after_request
+def after_request(response):
+    return security_headers(response)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
