@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, MapPin, Car, ArrowLeft, Save } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, MapPin, Car, ArrowLeft, Save, Camera, Upload, X } from 'lucide-react'
 
 export function Clientes() {
   const [clientes, setClientes] = useState([])
@@ -40,8 +40,11 @@ export function Clientes() {
     motor: '',
     cambio: 'manual',
     quilometragem: '',
-    observacoes: ''
+    observacoes: '',
+    fotos: []
   }])
+
+  const [fotosPreviews, setFotosPreviews] = useState([])
 
   useEffect(() => {
     carregarClientes()
@@ -96,8 +99,10 @@ export function Clientes() {
       motor: '',
       cambio: 'manual',
       quilometragem: '',
-      observacoes: ''
+      observacoes: '',
+      fotos: []
     }])
+    setFotosPreviews([])
     setShowForm(true)
   }
 
@@ -157,7 +162,8 @@ export function Clientes() {
       motor: '',
       cambio: 'manual',
       quilometragem: '',
-      observacoes: ''
+      observacoes: '',
+      fotos: []
     }])
   }
 
@@ -165,7 +171,61 @@ export function Clientes() {
     if (veiculos.length > 1) {
       const novosVeiculos = veiculos.filter((_, i) => i !== index)
       setVeiculos(novosVeiculos)
+      // Remover fotos do veículo removido
+      const novasFotosPreviews = fotosPreviews.filter(foto => foto.veiculoIndex !== index)
+      setFotosPreviews(novasFotosPreviews)
     }
+  }
+
+  const handleFotoUpload = (event, veiculoIndex) => {
+    const files = Array.from(event.target.files)
+    
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Arquivo muito grande. Máximo 5MB por foto.')
+        return
+      }
+
+      const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        alert('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WEBP.')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setFotosPreviews(prev => [...prev, {
+          file: file,
+          preview: e.target.result,
+          name: file.name,
+          veiculoIndex: veiculoIndex,
+          existing: false
+        }])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const abrirCamera = (veiculoIndex) => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = 'image/*'
+      input.capture = 'environment'
+      input.onchange = (e) => handleFotoUpload(e, veiculoIndex)
+      input.click()
+    } else {
+      alert('Câmera não disponível neste dispositivo')
+    }
+  }
+
+  const removerFoto = (fotoIndex) => {
+    const novasFotosPreviews = fotosPreviews.filter((_, i) => i !== fotoIndex)
+    setFotosPreviews(novasFotosPreviews)
+  }
+
+  const getFotosVeiculo = (veiculoIndex) => {
+    return fotosPreviews.filter(foto => foto.veiculoIndex === veiculoIndex)
   }
 
   const salvarCliente = async () => {
@@ -600,6 +660,56 @@ export function Clientes() {
                         placeholder="Branco, Preto, etc."
                       />
                     </div>
+                  </div>
+
+                  {/* Fotos do Veículo */}
+                  <div className="mt-4">
+                    <h4 className="text-md font-medium text-gray-900 mb-3">Fotos do Veículo (Vistoria)</h4>
+                    <div className="flex space-x-2 mb-4">
+                      <button
+                        type="button"
+                        onClick={() => abrirCamera(index)}
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Fotografar
+                      </button>
+                      <label className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => handleFotoUpload(e, index)}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Preview das fotos */}
+                    {getFotosVeiculo(index).length > 0 && (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {getFotosVeiculo(index).map((foto, fotoIndex) => {
+                          const globalFotoIndex = fotosPreviews.findIndex(f => f === foto)
+                          return (
+                            <div key={fotoIndex} className="relative">
+                              <img
+                                src={foto.preview}
+                                alt={`Foto ${fotoIndex + 1}`}
+                                className="w-full h-24 object-cover rounded-lg border"
+                              />
+                              <button
+                                onClick={() => removerFoto(globalFotoIndex)}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

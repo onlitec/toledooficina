@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Menu, Bell, User, Search, LogOut } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Menu, Bell, User, Search, LogOut, Settings, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -11,13 +12,44 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
+import { useSystem } from '@/contexts/SystemContext'
 
 export function Header({ sidebarOpen, setSidebarOpen }) {
-  const [notifications] = useState([
-    { id: 1, message: 'Estoque baixo: Filtro de óleo', type: 'warning' },
-    { id: 2, message: 'Ordem de serviço #1234 concluída', type: 'success' },
-    { id: 3, message: 'Vencimento IPVA próximo - Cliente João', type: 'info' },
-  ])
+  const navigate = useNavigate()
+  const { user, logout, notifications, isAdmin } = useSystem()
+
+  const handleLogout = async () => {
+    try {
+      // Chamar endpoint de logout se necessário
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+    } catch (error) {
+      console.error('Erro no logout:', error)
+    } finally {
+      logout()
+      navigate('/login')
+    }
+  }
+
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'admin': return 'bg-red-100 text-red-800'
+      case 'manager': return 'bg-blue-100 text-blue-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case 'admin': return 'Administrador'
+      case 'manager': return 'Gerente'
+      default: return 'Usuário'
+    }
+  }
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">

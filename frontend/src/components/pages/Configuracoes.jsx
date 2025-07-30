@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSystem } from '@/contexts/SystemContext'
-import { Settings, Building, Mail, Bell, Database, Save, Upload, Eye, EyeOff, MessageCircle, AlertTriangle } from 'lucide-react'
+import { Settings, Building, Mail, Bell, Database, Save, Upload, Eye, EyeOff, MessageCircle, AlertTriangle, Users } from 'lucide-react'
+import { UsersAdmin } from './UsersAdmin'
 
 export function Configuracoes() {
   const [activeTab, setActiveTab] = useState('empresa')
@@ -359,6 +360,17 @@ export function Configuracoes() {
               Notificações
             </button>
             <button
+              onClick={() => setActiveTab('usuarios')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'usuarios'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <Users className="h-4 w-4 inline mr-2" />
+              Usuários
+            </button>
+            <button
               onClick={() => setActiveTab('sistema')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'sistema'
@@ -637,6 +649,21 @@ export function Configuracoes() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Aba Usuários */}
+        {activeTab === 'usuarios' && (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+                <Users className="h-5 w-5 inline mr-2" />
+                Gerenciamento de Usuários
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">Cadastre, edite e gerencie usuários do sistema</p>
+              
+              <UsersAdmin />
             </div>
           </div>
         )}
