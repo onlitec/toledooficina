@@ -14,7 +14,7 @@ def listar_clientes():
         per_page = request.args.get('per_page', 10, type=int)
         search = request.args.get('search', '')
         
-        query = Cliente.query
+        query = Cliente.query.filter(Cliente.ativo == True)
         
         if search:
             query = query.filter(
@@ -46,7 +46,9 @@ def listar_clientes():
 def obter_cliente(cliente_id):
     """Obtém um cliente específico"""
     try:
-        cliente = Cliente.query.get_or_404(cliente_id)
+        cliente = Cliente.query.filter(Cliente.id == cliente_id, Cliente.ativo == True).first()
+        if not cliente:
+            return jsonify({'success': False, 'message': 'Cliente não encontrado'}), 404
         return jsonify({
             'success': True,
             'data': cliente.to_dict()
@@ -173,7 +175,9 @@ def deletar_cliente(cliente_id):
 def listar_veiculos_cliente(cliente_id):
     """Lista veículos de um cliente"""
     try:
-        cliente = Cliente.query.get_or_404(cliente_id)
+        cliente = Cliente.query.filter(Cliente.id == cliente_id, Cliente.ativo == True).first()
+        if not cliente:
+            return jsonify({'success': False, 'message': 'Cliente não encontrado'}), 404
         veiculos = [veiculo.to_dict() for veiculo in cliente.veiculos if veiculo.ativo]
         
         return jsonify({
