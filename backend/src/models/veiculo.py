@@ -30,6 +30,7 @@ class Veiculo(db.Model):
     
     # Dados adicionais
     observacoes = db.Column(db.Text)
+    fotos = db.Column(db.JSON)  # Lista de nomes dos arquivos de fotos
     ativo = db.Column(db.Boolean, default=True)
     
     # Timestamps
@@ -62,6 +63,7 @@ class Veiculo(db.Model):
             'vencimento_seguro': self.vencimento_seguro.isoformat() if self.vencimento_seguro else None,
             'vencimento_licenciamento': self.vencimento_licenciamento.isoformat() if self.vencimento_licenciamento else None,
             'observacoes': self.observacoes,
+            'fotos': self.fotos or [],
             'ativo': self.ativo,
             'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None

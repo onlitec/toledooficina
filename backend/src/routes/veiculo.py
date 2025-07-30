@@ -3,6 +3,8 @@ from datetime import datetime
 from src.models import db
 from src.models.veiculo import Veiculo
 from src.models.cliente import Cliente
+import os
+from werkzeug.utils import secure_filename
 
 veiculo_bp = Blueprint('veiculo', __name__)
 
@@ -92,6 +94,104 @@ def criar_veiculo():
             'message': 'Veiculo cadastrado com sucesso',
             'data': veiculo.to_dict()
         }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@veiculo_bp.route('/veiculos/<int:veiculo_id>/fotos', methods=['POST'])
+def upload_foto_veiculo(veiculo_id):
+    """Upload de foto para um veículo"""
+    try:
+        veiculo = Veiculo.query.get(veiculo_id)
+        if not veiculo:
+            return jsonify({'success': False, 'message': 'Veiculo nao encontrado'}), 404
+        
+        if 'foto' not in request.files:
+            return jsonify({'success': False, 'message': 'Nenhum arquivo enviado'}), 400
+        
+        file = request.files['foto']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'Nenhum arquivo selecionado'}), 400
+        
+        # Verificar tipo de arquivo
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        if not ('.' in file.filename and 
+                file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
+            return jsonify({'success': False, 'message': 'Tipo de arquivo nao permitido. Use PNG, JPG, GIF ou WEBP'}), 400
+        
+        # Verificar tamanho do arquivo (5MB máximo)
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)
+        
+        if file_size > 5 * 1024 * 1024:  # 5MB
+            return jsonify({'success': False, 'message': 'Arquivo muito grande. Maximo 5MB'}), 400
+        
+        # Criar diretório se não existir
+        upload_dir = os.path.join('uploads', 'veiculos')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Gerar nome único para o arquivo
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = secure_filename(file.filename)
+        name, ext = os.path.splitext(filename)
+        unique_filename = f"veiculo_{veiculo_id}_{timestamp}{ext}"
+        
+        # Salvar arquivo
+        file_path = os.path.join(upload_dir, unique_filename)
+        file.save(file_path)
+        
+        # Atualizar lista de fotos do veículo
+        if veiculo.fotos is None:
+            veiculo.fotos = []
+        
+        veiculo.fotos.append(unique_filename)
+        veiculo.data_atualizacao = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Foto enviada com sucesso',
+            'data': {
+                'nome_arquivo': unique_filename,
+                'url_foto': f'/static/uploads/veiculos/{unique_filename}',
+                'tamanho': file_size
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@veiculo_bp.route('/veiculos/<int:veiculo_id>/fotos/<string:nome_foto>', methods=['DELETE'])
+def remover_foto_veiculo(veiculo_id, nome_foto):
+    """Remove uma foto de um veículo"""
+    try:
+        veiculo = Veiculo.query.get(veiculo_id)
+        if not veiculo:
+            return jsonify({'success': False, 'message': 'Veiculo nao encontrado'}), 404
+        
+        if not veiculo.fotos or nome_foto not in veiculo.fotos:
+            return jsonify({'success': False, 'message': 'Foto nao encontrada'}), 404
+        
+        # Remover arquivo do sistema de arquivos
+        file_path = os.path.join('uploads', 'veiculos', nome_foto)
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except:
+                pass  # Ignorar erro se não conseguir remover
+        
+        # Remover da lista de fotos do veículo
+        veiculo.fotos.remove(nome_foto)
+        veiculo.data_atualizacao = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Foto removida com sucesso'
+        })
         
     except Exception as e:
         db.session.rollback()
