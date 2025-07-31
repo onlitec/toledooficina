@@ -2,19 +2,22 @@ version: '3.8'
 
 services:
   backend:
-    build:
+    build: 
       context: ./backend
       dockerfile: Dockerfile
     container_name: erp-oficina-backend
     environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+      - POSTGRES_DB=erp_oficina
+      - POSTGRES_USER=erp_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-Erp@2024#ProdSecure!9876}
       - POSTGRES_HOST=postgres
-      - POSTGRES_DB=${POSTGRES_DB:-erp_oficina}
-      - POSTGRES_USER=${POSTGRES_USER:-erp_user}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-Erp@2024#Prod$Secure!9876}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - ENVIRONMENT=production
+      - PYTHONPATH=/app/src
+      - SECRET_KEY=${SECRET_KEY:-your-default-secret-key-change-in-production}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-jwt-secret-key-change-in-production}
     volumes:
-      - backend_data:/app/data
+      - backend_data:/app/src/database
       - uploads_data:/app/uploads
       - backups_data:/app/backups
     depends_on:
@@ -24,78 +27,89 @@ services:
       - erp-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
   frontend:
-    build:
+    build: 
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.coolify
     container_name: erp-oficina-frontend
+    environment:
+      - VITE_API_URL=https://oficina.onlitec.com.br/api
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     networks:
       - erp-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+  # PostgreSQL database
   postgres:
     image: postgres:15-alpine
     container_name: erp-oficina-postgres
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-erp_oficina}
-      - POSTGRES_USER=${POSTGRES_USER:-erp_user}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-Erp@2024#Prod$Secure!9876}
+      POSTGRES_DB: erp_oficina
+      POSTGRES_USER: erp_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Erp@2024#ProdSecure!9876}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - erp-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-erp_user} -d ${POSTGRES_DB:-erp_oficina}"]
+      test: ["CMD-SHELL", "pg_isready -U erp_user -d erp_oficina"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 30s
+      retries: 3
 
+  # Nginx reverse proxy - SEMPRE ATIVO para Coolify
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    image: nginx:alpine
     container_name: erp-oficina-nginx
-    ports:
-      - "80:80"
-      - "443:443"
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-nginx"
+      - "traefik.enable=true"
+      - "traefik.http.routers.erp-oficina.rule=Host(`oficina.onlitec.com.br`)"
+      - "traefik.http.routers.erp-oficina.tls=true"
+      - "traefik.http.routers.erp-oficina.tls.certresolver=letsencrypt"
+      - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
+    volumes:
+      - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
     networks:
       - erp-network
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.erp-oficina.rule=Host(`${DOMAIN:-localhost}`)"
-      - "traefik.http.routers.erp-oficina.entrypoints=websecure"
-      - "traefik.http.routers.erp-oficina.tls.certresolver=letsencrypt"
-      - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
-      - "traefik.http.routers.erp-oficina-http.rule=Host(`${DOMAIN:-localhost}`)"
-      - "traefik.http.routers.erp-oficina-http.entrypoints=web"
-      - "traefik.http.routers.erp-oficina-http.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+networks:
+  erp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.101.0.0/16
 
 volumes:
   backend_data:
@@ -106,10 +120,3 @@ volumes:
     driver: local
   postgres_data:
     driver: local
-
-networks:
-  erp-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.101.0.0/16
