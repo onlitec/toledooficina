@@ -87,7 +87,6 @@ services:
       - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
     volumes:
       - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/logs:/var/log/nginx
     depends_on:
       frontend:
