@@ -1,92 +1,147 @@
 #!/usr/bin/env python3
 """
-Script simples para criar usuário admin no banco SQLite
+Script para inicializar usuário administrador no banco de dados
+Compatível com PostgreSQL e SQLite
 """
+
 import os
 import sys
+import psycopg2
 import sqlite3
-from werkzeug.security import generate_password_hash
+from pathlib import Path
 
-# Caminho para o banco SQLite
-db_path = os.path.join(os.path.dirname(__file__), 'src', 'database', 'app.db')
-
-print(f"🔍 Verificando banco de dados: {db_path}")
-
-if not os.path.exists(db_path):
-    print("❌ Banco de dados não encontrado!")
-    sys.exit(1)
-
-try:
-    # Conectar ao banco SQLite
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+def init_admin_user():
+    """Inicializar usuário administrador"""
     
-    # Verificar se a tabela users existe
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users';")
-    if not cursor.fetchone():
-        print("❌ Tabela 'users' não encontrada!")
+    # Detectar tipo de banco de dados
+    postgres_host = os.environ.get('POSTGRES_HOST')
+    
+    if postgres_host:
+        print("🐘 Conectando ao PostgreSQL...")
+        return init_admin_postgresql()
+    else:
+        print("📁 Conectando ao SQLite...")
+        return init_admin_sqlite()
+
+def init_admin_postgresql():
+    """Inicializar admin no PostgreSQL"""
+    try:
+        # Conectar ao PostgreSQL
+        conn = psycopg2.connect(
+            host=os.environ.get('POSTGRES_HOST', 'localhost'),
+            database=os.environ.get('POSTGRES_DB', 'erp_oficina'),
+            user=os.environ.get('POSTGRES_USER', 'erp_user'),
+            password=os.environ.get('POSTGRES_PASSWORD', 'erp_password')
+        )
+        cursor = conn.cursor()
+        
+        # Verificar se usuário Admin já existe (por username ou email)
+        cursor.execute("SELECT id, username, email FROM users WHERE username = 'AdminSuperUser' OR email = 'admin.super@oficina.com';")
+        admin_exists = cursor.fetchone()
+        
+        # Preparar hash da senha usando bcrypt
+        import bcrypt
+        password_bytes = 'AdM!n@2024#Sec$Pass'.encode('utf-8')
+        salt = bcrypt.gensalt()
+        password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+        
+        if admin_exists:
+            print(f"👤 Atualizando usuário Admin existente (ID: {admin_exists[0]})...")
+            # Atualizar usuário existente
+            cursor.execute(
+                """UPDATE users SET 
+                   username = 'AdminSuperUser', 
+                   email = 'admin.super@oficina.com', 
+                   nome_completo = 'Administrador do Sistema',
+                   password_hash = ?, 
+                   role = 'admin', 
+                   ativo = 1,
+                   failed_login_attempts = 0
+                   WHERE id = ?;""",
+                (password_hash, admin_exists[0])
+            )
+        else:
+            print("👤 Criando usuário Admin...")
+            # Inserir usuário Admin
+            cursor.execute("""
+                INSERT INTO users (username, email, password_hash, role, is_active, created_at, updated_at)
+                VALUES ('AdminSuperUser', 'admin.super@oficina.com', %s, 'admin', true, NOW(), NOW())
+            """, (password_hash,))
+        
+        conn.commit()
+        cursor.close()
         conn.close()
-        sys.exit(1)
-    
-    # Verificar se usuário Admin já existe (por username ou email)
-    cursor.execute("SELECT id, username, email FROM users WHERE username = 'Admin' OR email = 'admin@oficina.com';")
-    admin_exists = cursor.fetchone()
-    
-    # Preparar hash da senha usando bcrypt
-    import bcrypt
-    password_bytes = 'admin123'.encode('utf-8')
-    salt = bcrypt.gensalt()
-    password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
-    
-    if admin_exists:
-        print(f"👤 Usuário encontrado (ID: {admin_exists[0]}, Username: {admin_exists[1]}, Email: {admin_exists[2]}). Atualizando...")
-        # Atualizar usuário existente
-        cursor.execute(
-            """UPDATE users SET 
-               username = 'Admin', 
-               email = 'admin@oficina.com', 
-               nome_completo = 'Administrador do Sistema',
-               password_hash = ?, 
-               role = 'admin',
-               ativo = 1, 
-               failed_login_attempts = 0,
-               account_locked_until = NULL
-               WHERE id = ?;""",
-            (password_hash, admin_exists[0])
-        )
-    else:
-        print("👤 Criando usuário Admin...")
-        # Criar usuário admin
-        cursor.execute(
-            """INSERT INTO users (username, email, nome_completo, password_hash, role, ativo, data_cadastro, failed_login_attempts) 
-               VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 0);""",
-            ('Admin', 'admin@oficina.com', 'Administrador do Sistema', password_hash, 'admin', 1)
-        )
-    
-    # Confirmar mudanças
-    conn.commit()
-    
-    # Verificar usuário criado
-    cursor.execute("SELECT username, email, role, ativo FROM users WHERE username = 'Admin';")
-    admin_user = cursor.fetchone()
-    
-    if admin_user:
-        print("✅ Usuário Admin configurado com sucesso!")
-        print(f"   Username: {admin_user[0]}")
-        print(f"   Email: {admin_user[1]}")
-        print(f"   Role: {admin_user[2]}")
-        print(f"   Ativo: {admin_user[3]}")
-        print("   Senha: admin123")
-        print("\n🔐 IMPORTANTE: Altere a senha padrão após o primeiro login!")
-    else:
-        print("❌ Erro ao verificar usuário criado")
-    
-    conn.close()
-    
-except Exception as e:
-    print(f"❌ Erro: {e}")
-    sys.exit(1)
+        
+        print("✅ Usuário Admin inicializado com sucesso!")
+        print("   Username: AdminSuperUser")
+        print("   Email: admin.super@oficina.com")
+        print("   Senha: AdM!n@2024#Sec$Pass")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erro ao inicializar admin no PostgreSQL: {e}")
+        return False
 
-print("\n🚀 Agora você pode fazer login com:")
-print("   Username: Admin")
-print("   Senha: admin123")
+def init_admin_sqlite():
+    """Inicializar admin no SQLite"""
+    try:
+        # Caminho do banco SQLite
+        db_path = Path(__file__).parent / 'instance' / 'erp_oficina.db'
+        db_path.parent.mkdir(exist_ok=True)
+        
+        # Conectar ao SQLite
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+        
+        # Verificar se usuário Admin já existe
+        cursor.execute("SELECT id, username, email FROM users WHERE username = 'AdminSuperUser' OR email = 'admin.super@oficina.com';")
+        admin_exists = cursor.fetchone()
+        
+        # Preparar hash da senha usando bcrypt
+        import bcrypt
+        password_bytes = 'AdM!n@2024#Sec$Pass'.encode('utf-8')
+        salt = bcrypt.gensalt()
+        password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+        
+        if admin_exists:
+            print(f"👤 Atualizando usuário Admin existente (ID: {admin_exists[0]})...")
+            # Atualizar usuário existente
+            cursor.execute(
+                """UPDATE users SET 
+                   username = ?, 
+                   email = ?, 
+                   nome_completo = ?,
+                   password_hash = ?, 
+                   role = ?, 
+                   ativo = ?,
+                   failed_login_attempts = 0
+                   WHERE id = ?;""",
+                ('AdminSuperUser', 'admin.super@oficina.com', 'Administrador do Sistema', password_hash, 'admin', 1, admin_exists[0])
+            )
+        else:
+            print("👤 Criando usuário Admin...")
+            # Inserir usuário Admin
+            cursor.execute(
+                """INSERT INTO users (username, email, nome_completo, password_hash, role, ativo, data_cadastro, failed_login_attempts) 
+                   VALUES (?, ?, ?, ?, ?, ?, datetime('now'), 0);""",
+                ('AdminSuperUser', 'admin.super@oficina.com', 'Administrador do Sistema', password_hash, 'admin', 1)
+            )
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        print("✅ Usuário Admin inicializado com sucesso!")
+        print("   Username: AdminSuperUser")
+        print("   Email: admin.super@oficina.com")
+        print("   Senha: AdM!n@2024#Sec$Pass")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erro ao inicializar admin no SQLite: {e}")
+        return False
+
+if __name__ == '__main__':
+    print("🚀 Inicializando usuário administrador...")
+    success = init_admin_user()
+    sys.exit(0 if success else 1)

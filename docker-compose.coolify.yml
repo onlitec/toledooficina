@@ -6,6 +6,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: erp-oficina-backend
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-backend"
     environment:
       - FLASK_ENV=production
       - FLASK_DEBUG=0
@@ -20,11 +24,10 @@ services:
       - backend_data:/app/src/database
       - uploads_data:/app/uploads
       - backups_data:/app/backups
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # PostgreSQL será criado separadamente no Coolify
+    # depends_on: postgres removido
     networks:
-      - erp-network
+      - default
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/')"]
@@ -38,13 +41,17 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.coolify
     container_name: erp-oficina-frontend
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-frontend"
     environment:
       - VITE_API_URL=https://oficina.onlitec.com.br/api
     depends_on:
       backend:
         condition: service_started
     networks:
-      - erp-network
+      - default
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -53,24 +60,9 @@ services:
       retries: 3
       start_period: 40s
 
-  # PostgreSQL database
-  postgres:
-    image: postgres:15-alpine
-    container_name: erp-oficina-postgres
-    environment:
-      POSTGRES_DB: erp_oficina
-      POSTGRES_USER: erp_user
-      POSTGRES_PASSWORD: erp_password_2024
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - erp-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U erp_user -d erp_oficina"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # PostgreSQL será criado separadamente no Coolify
+  # Remover este serviço e criar via interface do Coolify
+  # Instruções em COOLIFY_POSTGRESQL_ISSUE.md
 
   # Nginx reverse proxy - SEMPRE ATIVO para Coolify
   nginx:
@@ -95,7 +87,7 @@ services:
       backend:
         condition: service_started
     networks:
-      - erp-network
+      - default
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
@@ -105,11 +97,9 @@ services:
       start_period: 30s
 
 networks:
-  erp-network:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.101.0.0/16
+  default:
+    external: true
+    name: coolify
 
 volumes:
   backend_data:
@@ -118,5 +108,4 @@ volumes:
     driver: local
   backups_data:
     driver: local
-  postgres_data:
-    driver: local
+  # postgres_data removido - PostgreSQL será criado separadamente no Coolify

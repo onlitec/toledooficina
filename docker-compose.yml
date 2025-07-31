@@ -6,12 +6,16 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: erp-oficina-backend
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-backend"
     environment:
       - FLASK_ENV=production
       - FLASK_DEBUG=0
       - POSTGRES_DB=erp_oficina
       - POSTGRES_USER=erp_user
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-Erp@2024#Prod$Secure!9876}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-"Erp@2024#ProdSecure!9876"}
       - POSTGRES_HOST=postgres
       - PYTHONPATH=/app/src
       - SECRET_KEY=${SECRET_KEY:-your-default-secret-key-change-in-production}
@@ -38,6 +42,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.coolify
     container_name: erp-oficina-frontend
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-frontend"
     environment:
       - VITE_API_URL=https://oficina.onlitec.com.br/api
     depends_on:
@@ -57,10 +65,14 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: erp-oficina-postgres
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=database"
+      - "coolify.name=erp-oficina-postgres"
     environment:
       POSTGRES_DB: erp_oficina
       POSTGRES_USER: erp_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Erp@2024#Prod$Secure!9876}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-"Erp@2024#ProdSecure!9876"}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -87,7 +99,6 @@ services:
       - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
     volumes:
       - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/logs:/var/log/nginx
     depends_on:
       frontend:
