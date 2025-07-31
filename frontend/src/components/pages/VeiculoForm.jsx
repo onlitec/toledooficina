@@ -9,7 +9,7 @@ import {
   User
 } from 'lucide-react'
 import { useNotify } from '../ui/notification'
-import { apiGet, apiPost, apiPut, apiDelete, apiUpload } from '@/utils/api'
+import { apiGet, apiPost, apiPut, apiDelete, apiUpload, getImageUrl } from '@/utils/api'
 
 export function VeiculoForm({ veiculo, onClose, onSave }) {
   const notify = useNotify()
@@ -65,7 +65,7 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
       // Carregar previews das fotos existentes
       if (veiculo.fotos && veiculo.fotos.length > 0) {
         const previews = veiculo.fotos.map(foto => ({
-          preview: `http://172.20.120.44:7080/static/uploads/veiculos/${foto}`,
+          preview: getImageUrl(`veiculos/${foto}`),
           name: foto,
           existing: true
         }))

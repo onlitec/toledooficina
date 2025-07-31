@@ -1,5 +1,13 @@
 // Configuração da API
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const STATIC_BASE_URL = import.meta.env.VITE_STATIC_URL || '/static'
+
+// Função para gerar URL de imagem
+export const getImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  return `${STATIC_BASE_URL}/uploads/${path}`
+}
 
 // Função utilitária para fazer requisições à API
 export const apiRequest = async (endpoint, options = {}) => {
@@ -117,5 +125,6 @@ export default {
   apiPost,
   apiPut,
   apiDelete,
-  apiUpload
+  apiUpload,
+  getImageUrl
 }
