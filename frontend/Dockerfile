@@ -28,13 +28,12 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copiar configuração do Nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expor a porta 80
-EXPOSE 80
+# Expor a porta 7080
+EXPOSE 7080
 
 # Healthcheck para verificar se o Nginx está rodando
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+    CMD curl -f http://localhost:7080/ || exit 1
 
 # Comando para iniciar o Nginx
 CMD ["nginx", "-g", "daemon off;"]
-
