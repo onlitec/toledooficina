@@ -76,6 +76,15 @@ services:
   nginx:
     image: nginx:alpine
     container_name: erp-oficina-nginx
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-nginx"
+      - "traefik.enable=true"
+      - "traefik.http.routers.erp-oficina.rule=Host(`oficina.onlitec.com.br`)"
+      - "traefik.http.routers.erp-oficina.tls=true"
+      - "traefik.http.routers.erp-oficina.tls.certresolver=letsencrypt"
+      - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
     volumes:
       - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
