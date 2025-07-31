@@ -97,8 +97,8 @@ services:
       - "traefik.http.routers.erp-oficina.tls=true"
       - "traefik.http.routers.erp-oficina.tls.certresolver=letsencrypt"
       - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     volumes:
       - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/logs:/var/log/nginx
