@@ -72,7 +72,7 @@ def create_app():
     app.register_blueprint(ordem_servico_bp, url_prefix="/api")
     app.register_blueprint(financeiro_bp, url_prefix="/api")
     app.register_blueprint(health_bp, url_prefix="/api")
-    # app.register_blueprint(auth_bp, url_prefix='/api')  # Removido para evitar conflito com user_bp
+    # app.register_blueprint(auth_bp, url_prefix='/api')  # Conflito com user_bp que já tem /auth/login
 
     # Inicializar middleware de segurança
     security_middleware = SecurityMiddleware(app)

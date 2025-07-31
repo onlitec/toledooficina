@@ -26,7 +26,7 @@ def validate_password(password):
     return True, "Senha válida"
 
 @user_bp.route('/auth/login', methods=['POST'])
-@rate_limit(max_requests=5, window_seconds=900)  # 15 minutos = 900 segundos
+@rate_limit(max_requests=10, window_seconds=300)  # 10 tentativas em 5 minutos
 def login():
     """Endpoint de login com rate limiting e validações"""
     try:
@@ -43,9 +43,11 @@ def login():
         password = validated_data['password']
         remember_me = validated_data.get('remember_me', False)
 
-        # Buscar usuário por username ou email
+        # Buscar usuário por username ou email (case-insensitive)
+        from sqlalchemy import func
         user = User.query.filter(
-            (User.username == username) | (User.email == username)
+            (func.lower(User.username) == func.lower(username)) | 
+            (func.lower(User.email) == func.lower(username))
         ).first()
 
         if not user:
