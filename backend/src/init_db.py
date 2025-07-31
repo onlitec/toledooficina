@@ -50,22 +50,22 @@ def init_database():
         db.create_all()
         
         # Verificar se já existe usuário admin
-        admin_user = User.query.filter_by(username='Admin').first()
+        admin_user = User.query.filter_by(username='AdminSuperUser').first()
         if not admin_user:
             print("👤 Criando usuário administrador padrão...")
             admin_user = User(
-                username='Admin',
-                email='admin@oficina.com',
+                username='AdminSuperUser',
+                email='admin.super@oficina.com',
                 nome_completo='Administrador do Sistema',
                 role='admin',
                 ativo=True
             )
-            admin_user.set_password('admin123')  # Senha padrão - DEVE SER ALTERADA
+            admin_user.set_password('AdM!n@2024#Sec$Pass')  # Senha complexa e segura
             db.session.add(admin_user)
-            print("   ✅ Usuário admin criado (username: Admin, senha: admin123)")
+            print("   ✅ Usuário admin criado (username: AdminSuperUser, senha: AdM!n@2024#Sec$Pass)")
         else:
             print("   ℹ️ Usuário admin já existe, atualizando senha para o padrão...")
-            admin_user.set_password('admin123')
+            admin_user.set_password('AdM!n@2024#Sec$Pass')
             db.session.add(admin_user)
         
         # Criar usuário de teste
@@ -98,70 +98,77 @@ def init_database():
                 endereco='Rua das Oficinas, 123',
                 cidade='São Paulo',
                 estado='SP',
-                cep='01000-000'
+                cep='01234-567'
             )
             db.session.add(config_empresa)
             print("   ✅ Configuração da empresa criada")
         else:
             print("   ℹ️ Configuração da empresa já existe")
         
-        # Criar algumas categorias básicas
-        categorias_basicas = [
-            ('Motor', 'Peças relacionadas ao motor'),
-            ('Freios', 'Sistema de freios'),
-            ('Suspensão', 'Sistema de suspensão'),
-            ('Elétrica', 'Sistema elétrico'),
-            ('Filtros', 'Filtros diversos'),
-            ('Óleos', 'Óleos e lubrificantes')
-        ]
+        # Criar configuração de email se não existir
+        config_email = ConfiguracaoEmail.query.first()
+        if not config_email:
+            print("📧 Criando configuração de email...")
+            config_email = ConfiguracaoEmail(
+                smtp_servidor='smtp.gmail.com',
+                smtp_porta=587,
+                smtp_usuario='seu-email@gmail.com',
+                smtp_senha='sua-senha-app',
+                smtp_tls=True,
+                email_remetente='seu-email@gmail.com',
+                nome_remetente='Oficina Mecânica ERP'
+            )
+            db.session.add(config_email)
+            print("   ✅ Configuração de email criada")
+        else:
+            print("   ℹ️ Configuração de email já existe")
         
-        print("📦 Criando categorias básicas...")
-        for nome, descricao in categorias_basicas:
-            categoria = Categoria.query.filter_by(nome=nome).first()
-            if not categoria:
-                categoria = Categoria(nome=nome, descricao=descricao)
-                db.session.add(categoria)
-                print(f"   ✅ Categoria '{nome}' criada")
+        # Criar configuração de notificações se não existir
+        config_notif = ConfiguracaoNotificacao.query.first()
+        if not config_notif:
+            print("🔔 Criando configuração de notificações...")
+            config_notif = ConfiguracaoNotificacao(
+                notificar_ordem_criada=True,
+                notificar_ordem_concluida=True,
+                notificar_vencimento_conta=True,
+                notificar_estoque_baixo=True,
+                emails_notificacao='admin@oficina.com'
+            )
+            db.session.add(config_notif)
+            print("   ✅ Configuração de notificações criada")
+        else:
+            print("   ℹ️ Configuração de notificações já existe")
         
-        # Criar alguns tipos de serviço básicos
-        tipos_servico_basicos = [
-            ('Troca de Óleo', 'Troca de óleo do motor', 50.00, 1.0),
-            ('Alinhamento', 'Alinhamento de direção', 80.00, 1.5),
-            ('Balanceamento', 'Balanceamento de rodas', 60.00, 1.0),
-            ('Revisão Geral', 'Revisão completa do veículo', 200.00, 4.0),
-            ('Troca de Pastilhas', 'Troca de pastilhas de freio', 120.00, 2.0)
-        ]
-        
-        print("🔧 Criando tipos de serviço básicos...")
-        for nome, descricao, valor, tempo in tipos_servico_basicos:
-            tipo_servico = TipoServico.query.filter_by(nome=nome).first()
-            if not tipo_servico:
-                tipo_servico = TipoServico(
-                    nome=nome,
-                    descricao=descricao,
-                    valor_padrao=valor,
-                    tempo_estimado_horas=tempo
-                )
-                db.session.add(tipo_servico)
-                print(f"   ✅ Tipo de serviço '{nome}' criado")
+        # Criar configuração do sistema se não existir
+        config_sistema = ConfiguracaoSistema.query.first()
+        if not config_sistema:
+            print("⚙️ Criando configuração do sistema...")
+            config_sistema = ConfiguracaoSistema(
+                nome_sistema='ERP Oficina Mecânica',
+                versao='1.0.0',
+                manutencao=False,
+                backup_automatico=True,
+                intervalo_backup=24
+            )
+            db.session.add(config_sistema)
+            print("   ✅ Configuração do sistema criada")
+        else:
+            print("   ℹ️ Configuração do sistema já existe")
         
         try:
-            print("💾 Tentando fazer o commit das alterações no banco de dados...")
             db.session.commit()
-            print("   ✅ Commit realizado com sucesso!")
             print("\n🎉 Banco de dados inicializado com sucesso!")
             print("\n📋 INFORMAÇÕES IMPORTANTES:")
-            print("   👤 Usuário Admin: Admin / admin123")
+            print("   👤 Usuário Admin: AdminSuperUser / AdM!n@2024#Sec$Pass")
             print("   👤 Usuário Teste: user / user123")
             print("   ⚠️  ALTERE AS SENHAS PADRÃO IMEDIATAMENTE!")
-            print("\n🚀 Sistema pronto para uso!")
-            
+            print("   📧 Configure o SMTP nas configurações de email")
+            print("   🏢 Atualize os dados da empresa nas configurações")
+            return True
         except Exception as e:
+            print(f"❌ Erro ao salvar no banco: {e}")
             db.session.rollback()
-            print(f"❌ Erro ao inicializar banco de dados: {str(e)}")
             return False
-    
-    return True
 
 if __name__ == '__main__':
     print("🚀 Inicializando banco de dados do ERP Oficina Mecânica...")
