@@ -11,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Plus, Edit, Trash2, Search, User, Shield, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirm } from '../ui/confirmation-dialog'
 
 export function UsersAdmin() {
   const { apiRequest, isAdmin } = useSystem()
+  const confirm = useConfirm()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -147,12 +149,13 @@ export function UsersAdmin() {
 
   // Deletar usuário (desativar)
   const handleDelete = async (userId, username) => {
-    if (!confirm(`Tem certeza que deseja desativar o usuário ${username}?`)) {
+    const confirmed = await confirm.confirmDelete(`Tem certeza que deseja desativar o usuário ${username}?`)
+    if (!confirmed) {
       return
     }
 
     try {
-      const response = await apiRequest(`/api/users/${userId}`, {
+      const response = await apiRequest(`http://localhost:5000/api/users/${userId}`, {
         method: 'DELETE'
       })
 

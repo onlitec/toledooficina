@@ -4,3 +4,8 @@ secrets/
 *.key
 *.pem
 *.crt
+
+# Backups
+backup/
+*.tar.gz
+*.sql

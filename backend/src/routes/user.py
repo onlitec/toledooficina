@@ -107,11 +107,23 @@ def refresh_token():
 
         refresh_token = validated_data['refresh_token']
         
-        # Verificar refresh token
-        user = User.verify_refresh_token(refresh_token)
-        if not user:
+        # Verificar refresh token - buscar todos os usuários e verificar qual tem o token válido
+        users = User.query.filter(
+            User.refresh_token_hash.isnot(None),
+            User.refresh_token_expires.isnot(None)
+        ).all()
+        
+        valid_user = None
+        for u in users:
+            if u.verify_refresh_token(refresh_token):
+                valid_user = u
+                break
+        
+        if not valid_user:
             log_security_event('refresh_token_attempt', {'success': False, 'reason': 'invalid_token'})
             return jsonify({'success': False, 'message': 'Refresh token inválido ou expirado'}), 401
+        
+        user = valid_user
         
         if not user.ativo:
             log_security_event('refresh_token_attempt', {'user_id': user.id, 'success': False, 'reason': 'user_inactive'})

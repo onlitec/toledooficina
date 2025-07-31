@@ -13,8 +13,10 @@ import {
   Users,
   Wrench
 } from 'lucide-react'
+import { useNotify } from '../ui/notification'
 
 export function Relatorios() {
+  const notify = useNotify()
   const [showForm, setShowForm] = useState(false)
   const [relatorios, setRelatorios] = useState([])
   const [loading, setLoading] = useState(false)
@@ -93,17 +95,17 @@ export function Relatorios() {
 
       // Validações básicas
       if (!relatorioData.titulo.trim()) {
-        alert('Título do relatório é obrigatório')
+        notify.error('Título do relatório é obrigatório')
         return
       }
 
       if (!relatorioData.data_inicio) {
-        alert('Data de início é obrigatória')
+        notify.error('Data de início é obrigatória')
         return
       }
 
       if (!relatorioData.data_fim) {
-        alert('Data de fim é obrigatória')
+        notify.error('Data de fim é obrigatória')
         return
       }
 
@@ -118,7 +120,7 @@ export function Relatorios() {
       const result = await response.json()
 
       if (result.success) {
-        alert('Relatório gerado com sucesso!')
+        notify.success('Relatório gerado com sucesso!')
         setShowForm(false)
         loadRelatorios()
 
@@ -131,7 +133,7 @@ export function Relatorios() {
       }
 
     } catch (error) {
-      alert('Erro ao gerar relatório: ' + error.message)
+      notify.error('Erro ao gerar relatório: ' + error.message)
     } finally {
       setLoading(false)
     }

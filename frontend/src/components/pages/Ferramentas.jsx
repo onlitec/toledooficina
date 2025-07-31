@@ -18,8 +18,12 @@ import {
   ArrowLeft,
   Save
 } from 'lucide-react'
+import { useNotify } from '@/components/ui/notification'
+import { useConfirm } from '@/components/ui/confirmation-dialog'
 
 export function Ferramentas() {
+  const notify = useNotify()
+  const confirm = useConfirm()
   const [searchTerm, setSearchTerm] = useState('')
   const [ferramentas, setFerramentas] = useState([])
   const [estatisticas, setEstatisticas] = useState({})
@@ -134,7 +138,7 @@ export function Ferramentas() {
 
       // Validações básicas
       if (!ferramentaData.nome.trim()) {
-        alert('Nome da ferramenta é obrigatório')
+        notify.error('Nome da ferramenta é obrigatório')
         return
       }
 
@@ -157,7 +161,7 @@ export function Ferramentas() {
       const result = await response.json()
 
       if (response.ok) {
-        alert(editingFerramenta?.id ? 'Ferramenta atualizada com sucesso!' : 'Ferramenta cadastrada com sucesso!')
+        notify.success(editingFerramenta?.id ? 'Ferramenta atualizada com sucesso!' : 'Ferramenta cadastrada com sucesso!')
         setShowForm(false)
         setEditingFerramenta(null)
         loadFerramentas()
@@ -167,30 +171,32 @@ export function Ferramentas() {
       }
 
     } catch (error) {
-      alert('Erro ao salvar ferramenta: ' + error.message)
+      notify.error('Erro ao salvar ferramenta: ' + error.message)
     } finally {
       setLoading(false)
     }
   }
 
   const handleDeleteFerramenta = async (id) => {
-    if (!confirm('Tem certeza que deseja remover esta ferramenta?')) return
+    const confirmed = await confirm.confirmDelete('Tem certeza que deseja remover esta ferramenta? Esta ação não pode ser desfeita.')
+    if (!confirmed) return
     
     try {
-      const response = await fetch(`/api/ferramentas/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/ferramentas/${id}`, {
         method: 'DELETE'
       })
       
       if (response.ok) {
+        notify.success('Ferramenta removida com sucesso!')
         loadFerramentas()
         loadEstatisticas()
       } else {
         const error = await response.json()
-        alert(error.error || 'Erro ao remover ferramenta')
+        notify.error(error.error || 'Erro ao remover ferramenta')
       }
     } catch (error) {
       console.error('Erro ao remover ferramenta:', error)
-      alert('Erro ao remover ferramenta')
+      notify.error('Erro ao remover ferramenta')
     }
   }
 
@@ -205,22 +211,24 @@ export function Ferramentas() {
       })
       
       if (response.ok) {
+        notify.success('Empréstimo registrado com sucesso!')
         setShowEmprestimoForm(false)
         setSelectedFerramenta(null)
         loadFerramentas()
         loadEstatisticas()
       } else {
         const error = await response.json()
-        alert(error.error || 'Erro ao registrar empréstimo')
+        notify.error(error.error || 'Erro ao registrar empréstimo')
       }
     } catch (error) {
       console.error('Erro ao registrar empréstimo:', error)
-      alert('Erro ao registrar empréstimo')
+      notify.error('Erro ao registrar empréstimo')
     }
   }
 
   const handleDevolucao = async (id) => {
-    if (!confirm('Confirmar devolução da ferramenta?')) return
+    const confirmed = await confirm.confirm('Confirmar devolução da ferramenta?')
+    if (!confirmed) return
     
     try {
       const response = await fetch(`/api/ferramentas/${id}/devolucao`, {
@@ -228,15 +236,16 @@ export function Ferramentas() {
       })
       
       if (response.ok) {
+        notify.success('Devolução registrada com sucesso!')
         loadFerramentas()
         loadEstatisticas()
       } else {
         const error = await response.json()
-        alert(error.error || 'Erro ao registrar devolução')
+        notify.error(error.error || 'Erro ao registrar devolução')
       }
     } catch (error) {
       console.error('Erro ao registrar devolução:', error)
-      alert('Erro ao registrar devolução')
+      notify.error('Erro ao registrar devolução')
     }
   }
 
@@ -251,17 +260,18 @@ export function Ferramentas() {
       })
       
       if (response.ok) {
+        notify.success('Manutenção registrada com sucesso!')
         setShowManutencaoForm(false)
         setSelectedFerramenta(null)
         loadFerramentas()
         loadEstatisticas()
       } else {
         const error = await response.json()
-        alert(error.error || 'Erro ao registrar manutenção')
+        notify.error(error.error || 'Erro ao registrar manutenção')
       }
     } catch (error) {
       console.error('Erro ao registrar manutenção:', error)
-      alert('Erro ao registrar manutenção')
+      notify.error('Erro ao registrar manutenção')
     }
   }
 

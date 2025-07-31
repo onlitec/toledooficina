@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Settings, Building, Mail, Bell, Database, Save, Upload, Eye, EyeOff, Phone, MessageCircle, AlertTriangle } from 'lucide-react'
+import { useNotify } from '../ui/notification'
 
 export function Configuracoes() {
+  const notify = useNotify()
   const [activeTab, setActiveTab] = useState('empresa')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -143,12 +145,12 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Configurações da empresa salvas com sucesso!')
+        notify.success('Configurações da empresa salvas com sucesso!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao salvar configurações da empresa: ' + error.message)
+      notify.error('Erro ao salvar configurações da empresa: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -167,12 +169,12 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Configurações de email salvas com sucesso!')
+        notify.success('Configurações de email salvas com sucesso!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao salvar configurações de email: ' + error.message)
+      notify.error('Erro ao salvar configurações de email: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -191,12 +193,12 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Email de teste enviado com sucesso!')
+        notify.success('Email de teste enviado com sucesso!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao testar email: ' + error.message)
+      notify.error('Erro ao testar email: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -215,12 +217,12 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Configurações de notificações salvas com sucesso!')
+        notify.success('Configurações de notificações salvas com sucesso!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao salvar configurações de notificações: ' + error.message)
+      notify.error('Erro ao salvar configurações de notificações: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -243,12 +245,12 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Mensagem de teste enviada via WhatsApp!')
+        notify.success('Mensagem de teste enviada via WhatsApp!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao testar WhatsApp: ' + error.message)
+      notify.error('Erro ao testar WhatsApp: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -311,3 +313,11 @@ export function Configuracoes() {
             </button>
           </nav>
         </div>
+
+        {/* Conteúdo das abas seria renderizado aqui */}
+        {/* TODO: Implementar o conteúdo das abas */}
+        
+      </div>
+    </div>
+  )
+}

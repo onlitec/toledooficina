@@ -14,7 +14,7 @@ class Veiculo(db.Model):
     ano_modelo = db.Column(db.Integer)
     cor = db.Column(db.String(30))
     placa = db.Column(db.String(10), unique=True, nullable=False)
-    chassi = db.Column(db.String(20), unique=True)
+    chassi = db.Column(db.String(30), unique=True)
     renavam = db.Column(db.String(15))
     
     # Dados técnicos
@@ -68,7 +68,3 @@ class Veiculo(db.Model):
             'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None,
             'data_atualizacao': self.data_atualizacao.isoformat() if self.data_atualizacao else None
         }
-
-    
-    def __repr__(self):
-        return f'<Veiculo {self.marca} {self.modelo} - {self.placa}>'

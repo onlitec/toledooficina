@@ -15,8 +15,12 @@ import {
   ArrowLeft,
   Save
 } from 'lucide-react'
+import { useNotify } from '../ui/notification'
+import { useConfirm } from '../ui/confirmation-dialog'
 
 export function Estoque() {
+  const notify = useNotify()
+  const confirm = useConfirm()
   const [searchTerm, setSearchTerm] = useState('')
   const [pecas, setPecas] = useState([])
   const [categorias, setCategorias] = useState([])
@@ -161,21 +165,26 @@ export function Estoque() {
   }
 
   const handleExcluirPeca = async (id) => {
-    if (confirm('Tem certeza que deseja excluir esta peça?')) {
+    const confirmed = await confirm.confirmDelete(
+      'Tem certeza que deseja excluir esta peça?',
+      'Esta ação não pode ser desfeita.'
+    )
+    
+    if (confirmed) {
       try {
-        const response = await fetch(`/api/pecas/${id}`, {
+        const response = await fetch(`http://localhost:5000/api/pecas/${id}`, {
           method: 'DELETE'
         })
         const result = await response.json()
         
         if (result.success) {
-          alert('Peça excluída com sucesso!')
+          notify.success('Peça excluída com sucesso!')
           carregarDados()
         } else {
-          alert('Erro ao excluir peça: ' + result.message)
+          notify.error('Erro ao excluir peça: ' + result.message)
         }
       } catch (error) {
-        alert('Erro ao excluir peça: ' + error.message)
+        notify.error('Erro ao excluir peça: ' + error.message)
       }
     }
   }
@@ -196,7 +205,7 @@ export function Estoque() {
 
       // Validações básicas
       if (!pecaData.nome.trim()) {
-        alert('Nome da peça é obrigatório')
+        notify.error('Nome da peça é obrigatório')
         return
       }
 
@@ -228,7 +237,7 @@ export function Estoque() {
       const result = await response.json()
 
       if (result.success) {
-        alert(editingPeca?.id ? 'Peça atualizada com sucesso!' : 'Peça cadastrada com sucesso!')
+        notify.success(editingPeca?.id ? 'Peça atualizada com sucesso!' : 'Peça cadastrada com sucesso!')
         setShowForm(false)
         setEditingPeca(null)
         carregarDados()
@@ -237,7 +246,7 @@ export function Estoque() {
       }
 
     } catch (error) {
-      alert('Erro ao salvar peça: ' + error.message)
+      notify.error('Erro ao salvar peça: ' + error.message)
     } finally {
       setLoading(false)
     }

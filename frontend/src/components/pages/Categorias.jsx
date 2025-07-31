@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, ArrowLeft, Save } from 'lucide-react'
+import { useNotify } from '../ui/notification'
+import { useConfirm } from '../ui/confirmation-dialog'
 
 export function Categorias() {
+  const notify = useNotify()
+  const confirm = useConfirm()
   const [searchTerm, setSearchTerm] = useState('')
   const [categorias, setCategorias] = useState([])
   const [loading, setLoading] = useState(true)
@@ -67,7 +71,7 @@ export function Categorias() {
 
       // Validar dados obrigatórios
       if (!categoriaData.nome.trim()) {
-        alert('Nome da categoria é obrigatório')
+        notify.error('Nome da categoria é obrigatório')
         return
       }
 
@@ -88,44 +92,49 @@ export function Categorias() {
       const result = await response.json()
 
       if (result.success) {
-        alert(result.message)
+        notify.success(result.message)
         setShowForm(false)
         setCategoriaData({ nome: '', descricao: '' })
         setEditingCategoria(null)
         carregarCategorias()
       } else {
-        alert('Erro: ' + result.message)
+        notify.error('Erro: ' + result.message)
       }
     } catch (error) {
       console.error('Erro ao salvar categoria:', error)
-      alert('Erro ao salvar categoria: ' + error.message)
+      notify.error('Erro ao salvar categoria: ' + error.message)
     } finally {
       setLoading(false)
     }
   }
 
   const excluirCategoria = async (id) => {
-    if (!confirm('Tem certeza que deseja excluir esta categoria?')) {
+    const confirmed = await confirm.confirmDelete(
+      'Tem certeza que deseja excluir esta categoria?',
+      'Esta ação não pode ser desfeita.'
+    )
+    
+    if (!confirmed) {
       return
     }
 
     try {
       setLoading(true)
-      const response = await fetch(`/api/categorias/${id}`, {
+      const response = await fetch(`http://localhost:5000/api/categorias/${id}`, {
         method: 'DELETE'
       })
 
       const result = await response.json()
 
       if (result.success) {
-        alert('Categoria excluída com sucesso!')
+        notify.success('Categoria excluída com sucesso!')
         carregarCategorias()
       } else {
-        alert('Erro: ' + result.message)
+        notify.error('Erro: ' + result.message)
       }
     } catch (error) {
       console.error('Erro ao excluir categoria:', error)
-      alert('Erro ao excluir categoria: ' + error.message)
+      notify.error('Erro ao excluir categoria: ' + error.message)
     } finally {
       setLoading(false)
     }

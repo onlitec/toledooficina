@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, ArrowLeft, Save, FileText, User, Calendar, DollarSign } from 'lucide-react'
+import { useNotify } from '@/components/ui/notification'
+import { useConfirm } from '@/components/ui/confirmation-dialog'
 
 export function OrdensServico() {
+  const notify = useNotify()
+  const confirm = useConfirm()
   const [searchTerm, setSearchTerm] = useState('')
   const [osList, setOsList] = useState([])
   const [loading, setLoading] = useState(true)
@@ -144,12 +148,12 @@ export function OrdensServico() {
 
       // Validações básicas
       if (!osData.cliente_id) {
-        alert('Cliente é obrigatório')
+        notify.error('Cliente é obrigatório')
         return
       }
 
       if (!osData.descricao_problema.trim()) {
-        alert('Descrição do problema é obrigatória')
+        notify.error('Descrição do problema é obrigatória')
         return
       }
 
@@ -170,7 +174,7 @@ export function OrdensServico() {
       const result = await response.json()
 
       if (result.success) {
-        alert(editingOs?.id ? 'Ordem de serviço atualizada com sucesso!' : 'Ordem de serviço criada com sucesso!')
+        notify.success(editingOs?.id ? 'Ordem de serviço atualizada com sucesso!' : 'Ordem de serviço criada com sucesso!')
         setShowForm(false)
         setEditingOs(null)
         loadOs()
@@ -179,25 +183,27 @@ export function OrdensServico() {
       }
 
     } catch (error) {
-      alert('Erro ao salvar ordem de serviço: ' + error.message)
+      notify.error('Erro ao salvar ordem de serviço: ' + error.message)
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (id) => {
-    if (!confirm('Deseja cancelar esta ordem de serviço?')) return
+    const confirmed = await confirm.confirmDelete('Deseja cancelar esta ordem de serviço? Esta ação não pode ser desfeita.')
+    if (!confirmed) return
     try {
-      const response = await fetch(`/api/ordens-servico/${id}`, { method: 'DELETE' })
+      const response = await fetch(`http://localhost:5000/api/ordens-servico/${id}`, { method: 'DELETE' })
       const json = await response.json()
       if (json.success) {
+        notify.success('Ordem de serviço cancelada com sucesso!')
         loadOs()
       } else {
-        alert(json.message || 'Erro ao cancelar ordem de serviço')
+        notify.error(json.message || 'Erro ao cancelar ordem de serviço')
       }
     } catch (error) {
       console.error('Erro ao cancelar ordem de serviço:', error)
-      alert('Erro ao cancelar ordem de serviço')
+      notify.error('Erro ao cancelar ordem de serviço')
     }
   }
 

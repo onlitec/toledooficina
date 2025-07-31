@@ -12,8 +12,12 @@ import {
   Calendar,
   CreditCard
 } from 'lucide-react'
+import { useNotify } from '../ui/notification'
+import { useConfirm } from '../ui/confirmation-dialog'
 
 export function Financeiro() {
+  const notify = useNotify()
+  const confirm = useConfirm()
   const [searchTerm, setSearchTerm] = useState('')
   const [contas, setContas] = useState([])
   const [loading, setLoading] = useState(false)
@@ -102,17 +106,17 @@ export function Financeiro() {
 
       // Validações básicas
       if (!contaData.descricao.trim()) {
-        alert('Descrição é obrigatória')
+        notify.error('Descrição é obrigatória')
         return
       }
 
       if (!contaData.valor) {
-        alert('Valor é obrigatório')
+        notify.error('Valor é obrigatório')
         return
       }
 
       if (!contaData.data_vencimento) {
-        alert('Data de vencimento é obrigatória')
+        notify.error('Data de vencimento é obrigatória')
         return
       }
 
@@ -133,7 +137,7 @@ export function Financeiro() {
       const result = await response.json()
 
       if (result.success) {
-        alert(editingConta?.id ? 'Conta atualizada com sucesso!' : 'Conta cadastrada com sucesso!')
+        notify.success(editingConta?.id ? 'Conta atualizada com sucesso!' : 'Conta cadastrada com sucesso!')
         setShowForm(false)
         setEditingConta(null)
         loadContas()
@@ -142,7 +146,7 @@ export function Financeiro() {
       }
 
     } catch (error) {
-      alert('Erro ao salvar conta: ' + error.message)
+      notify.error('Erro ao salvar conta: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -458,9 +462,14 @@ export function Financeiro() {
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
-                          onClick={() => {
-                            if (confirm('Tem certeza que deseja excluir esta conta?')) {
+                          onClick={async () => {
+                            const confirmed = await confirm.confirmDelete(
+                              'Tem certeza que deseja excluir esta conta?',
+                              'Esta ação não pode ser desfeita.'
+                            )
+                            if (confirmed) {
                               // Implementar exclusão
+                              notify.success('Conta excluída com sucesso!')
                             }
                           }}
                           className="text-red-600 hover:text-red-900"

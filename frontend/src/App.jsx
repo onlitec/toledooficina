@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { SystemProvider, useSystem } from '@/contexts/SystemContext'
+import { NotificationProvider } from '@/components/ui/notification'
+import { ConfirmationProvider } from '@/components/ui/confirmation-dialog'
 import { Sidebar } from '@/components/Sidebar'
 import { Header } from '@/components/Header'
 import { ProtectedRoute, AdminRoute } from '@/components/ProtectedRoute'
@@ -106,9 +108,13 @@ function AppRoutes() {
 function App() {
   return (
     <SystemProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
+      <NotificationProvider>
+        <ConfirmationProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </ConfirmationProvider>
+      </NotificationProvider>
     </SystemProvider>
   )
 }

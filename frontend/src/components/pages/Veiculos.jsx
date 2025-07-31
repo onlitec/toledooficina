@@ -14,9 +14,13 @@ import {
   Settings
 } from 'lucide-react'
 import { VeiculoForm } from './VeiculoForm'
+import { useNotify } from '../ui/notification'
+import { useConfirm } from '../ui/confirmation-dialog'
 
 export function Veiculos() {
   const navigate = useNavigate()
+  const notify = useNotify()
+  const confirm = useConfirm()
   const [searchTerm, setSearchTerm] = useState('')
   const [veiculos, setVeiculos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -63,21 +67,26 @@ export function Veiculos() {
   }
 
   const handleExcluirVeiculo = async (id) => {
-    if (confirm('Tem certeza que deseja excluir este veículo?')) {
+    const confirmed = await confirm.confirmDelete(
+      'Tem certeza que deseja excluir este veículo?',
+      'Esta ação não pode ser desfeita.'
+    )
+    
+    if (confirmed) {
       try {
-        const response = await fetch(`/api/veiculos/${id}`, {
+        const response = await fetch(`http://localhost:5000/api/veiculos/${id}`, {
           method: 'DELETE'
         })
         const result = await response.json()
         
         if (result.success) {
-          alert('Veículo excluído com sucesso!')
+          notify.success('Veículo excluído com sucesso!')
           carregarVeiculos()
         } else {
-          alert('Erro ao excluir veículo: ' + result.message)
+          notify.error('Erro ao excluir veículo: ' + result.message)
         }
       } catch (error) {
-        alert('Erro ao excluir veículo: ' + error.message)
+        notify.error('Erro ao excluir veículo: ' + error.message)
       }
     }
   }

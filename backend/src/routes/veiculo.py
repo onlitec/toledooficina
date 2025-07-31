@@ -79,12 +79,21 @@ def criar_veiculo():
         else:
             chassi = None  # Converter string vazia para NULL
         
+        # Tratar campos integer - converter strings vazias para None
+        def safe_int(value):
+            if value is None or value == '' or value == 'null':
+                return None
+            try:
+                return int(value) if value else None
+            except (ValueError, TypeError):
+                return None
+        
         veiculo = Veiculo(
             cliente_id=data['cliente_id'],
             marca=data['marca'],
             modelo=data['modelo'],
-            ano_fabricacao=data.get('ano_fabricacao'),
-            ano_modelo=data.get('ano_modelo'),
+            ano_fabricacao=safe_int(data.get('ano_fabricacao')),
+            ano_modelo=safe_int(data.get('ano_modelo')),
             cor=data.get('cor'),
             placa=data['placa'],
             chassi=chassi,
@@ -92,7 +101,7 @@ def criar_veiculo():
             combustivel=data.get('combustivel'),
             motor=data.get('motor'),
             cambio=data.get('cambio'),
-            quilometragem=data.get('quilometragem', 0),
+            quilometragem=safe_int(data.get('quilometragem')) or 0,
             observacoes=data.get('observacoes'),
         )
         
@@ -176,6 +185,31 @@ def upload_foto_veiculo(veiculo_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@veiculo_bp.route('/veiculos/<int:veiculo_id>/fotos/<string:nome_foto>', methods=['GET'])
+def servir_foto_veiculo(veiculo_id, nome_foto):
+    """Serve uma foto de um veículo"""
+    try:
+        from flask import send_from_directory
+        
+        veiculo = Veiculo.query.get(veiculo_id)
+        if not veiculo:
+            return jsonify({'success': False, 'message': 'Veiculo nao encontrado'}), 404
+        
+        if not veiculo.fotos or nome_foto not in veiculo.fotos:
+            return jsonify({'success': False, 'message': 'Foto nao encontrada'}), 404
+        
+        # Verificar se o arquivo existe
+        file_path = os.path.join('uploads', 'veiculos', nome_foto)
+        if not os.path.exists(file_path):
+            return jsonify({'success': False, 'message': 'Arquivo de foto nao encontrado'}), 404
+        
+        # Servir o arquivo
+        uploads_dir = os.path.join('uploads', 'veiculos')
+        return send_from_directory(uploads_dir, nome_foto)
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @veiculo_bp.route('/veiculos/<int:veiculo_id>/fotos/<string:nome_foto>', methods=['DELETE'])
 def remover_foto_veiculo(veiculo_id, nome_foto):
     """Remove uma foto de um veículo"""
@@ -250,15 +284,24 @@ def atualizar_veiculo(veiculo_id):
             if veiculo_existente:
                 return jsonify({'success': False, 'message': 'Placa ja cadastrada'}), 400
         
+        # Função para tratar campos integer
+        def safe_int(value):
+            if value is None or value == '' or value == 'null':
+                return None
+            try:
+                return int(value) if value else None
+            except (ValueError, TypeError):
+                return None
+        
         # Atualizar campos
         if 'marca' in data:
             veiculo.marca = data['marca']
         if 'modelo' in data:
             veiculo.modelo = data['modelo']
         if 'ano_fabricacao' in data:
-            veiculo.ano_fabricacao = data['ano_fabricacao']
+            veiculo.ano_fabricacao = safe_int(data['ano_fabricacao'])
         if 'ano_modelo' in data:
-            veiculo.ano_modelo = data['ano_modelo']
+            veiculo.ano_modelo = safe_int(data['ano_modelo'])
         if 'cor' in data:
             veiculo.cor = data['cor']
         if 'placa' in data:
@@ -282,7 +325,7 @@ def atualizar_veiculo(veiculo_id):
         if 'cambio' in data:
             veiculo.cambio = data['cambio']
         if 'quilometragem' in data:
-            veiculo.quilometragem = data['quilometragem']
+            veiculo.quilometragem = safe_int(data['quilometragem']) or 0
         if 'observacoes' in data:
             veiculo.observacoes = data['observacoes']
         

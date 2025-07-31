@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, MapPin, Car, ArrowLeft, Save, Camera, Upload, X } from 'lucide-react'
+import { useNotify } from '@/components/ui/notification'
+import { useConfirm } from '@/components/ui/confirmation-dialog'
 
 export function Clientes() {
+  const notify = useNotify()
+  const confirm = useConfirm()
   const [clientes, setClientes] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -131,21 +135,22 @@ export function Clientes() {
   }
 
   const handleExcluirCliente = async (id) => {
-    if (confirm('Tem certeza que deseja excluir este cliente?')) {
+    const confirmed = await confirm.confirmDelete('Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita.')
+    if (confirmed) {
       try {
-        const response = await fetch(`/api/clientes/${id}`, {
+        const response = await fetch(`http://localhost:5000/api/clientes/${id}`, {
           method: 'DELETE'
         })
         const result = await response.json()
         
         if (result.success) {
-          alert('Cliente excluído com sucesso!')
+          notify.success('Cliente excluído com sucesso!')
           carregarClientes()
         } else {
-          alert('Erro ao excluir cliente: ' + result.message)
+          notify.error('Erro ao excluir cliente: ' + result.message)
         }
       } catch (error) {
-        alert('Erro ao excluir cliente: ' + error.message)
+        notify.error('Erro ao excluir cliente: ' + error.message)
       }
     }
   }
@@ -200,13 +205,13 @@ export function Clientes() {
     
     files.forEach(file => {
       if (file.size > 5 * 1024 * 1024) {
-        alert('Arquivo muito grande. Máximo 5MB por foto.')
+        notify.error('Arquivo muito grande. Máximo 5MB por foto.')
         return
       }
 
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
-        alert('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WEBP.')
+        notify.error('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WEBP.')
         return
       }
 
@@ -233,7 +238,7 @@ export function Clientes() {
       input.onchange = (e) => handleFotoUpload(e, veiculoIndex)
       input.click()
     } else {
-      alert('Câmera não disponível neste dispositivo')
+      notify.error('Câmera não disponível neste dispositivo')
     }
   }
 
@@ -278,7 +283,7 @@ export function Clientes() {
 
       // Validar dados obrigatórios
       if (!clienteData.nome || !clienteData.cpf_cnpj) {
-        alert("Nome e CPF/CNPJ são obrigatórios")
+        notify.error("Nome e CPF/CNPJ são obrigatórios")
         return
       }
 
@@ -287,7 +292,7 @@ export function Clientes() {
       for (let i = 0; i < veiculosValidos.length; i++) {
         const veiculo = veiculosValidos[i]
         if (!veiculo.marca || !veiculo.modelo || !veiculo.placa) {
-          alert(`Marca, modelo e placa são obrigatórios para o veículo ${i + 1}`)
+          notify.error(`Marca, modelo e placa são obrigatórios para o veículo ${i + 1}`)
           return
         }
       }
@@ -305,7 +310,7 @@ export function Clientes() {
         const result = await response.json()
 
         if (result.success) {
-          alert("Cliente atualizado com sucesso!")
+          notify.success("Cliente atualizado com sucesso!")
           setShowForm(false)
           carregarClientes()
         } else {
@@ -334,7 +339,7 @@ export function Clientes() {
             await uploadFotosVeiculos(result.data.veiculos)
           }
           
-          alert(result.message || "Cliente cadastrado com sucesso!")
+          notify.success(result.message || "Cliente cadastrado com sucesso!")
           setShowForm(false)
           carregarClientes()
         } else {
@@ -343,7 +348,7 @@ export function Clientes() {
       }
 
     } catch (error) {
-      alert("Erro ao salvar: " + error.message)
+      notify.error("Erro ao salvar: " + error.message)
     } finally {
       setLoading(false)
     }

@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/components/ui/use-toast'
+import { useNotify } from '../ui/notification'
 
 export function ConfiguracoesCompletas() {
+  const notify = useNotify()
   // Estados para cada seção
   const [empresaData, setEmpresaData] = useState({
     razao_social: '',
@@ -93,12 +95,12 @@ export function ConfiguracoesCompletas() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Configurações da empresa salvas com sucesso!')
+        notify.success('Configurações da empresa salvas com sucesso!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao salvar configurações da empresa: ' + error.message)
+      notify.error('Erro ao salvar configurações da empresa: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -258,10 +260,10 @@ export function ConfiguracoesCompletas() {
               </div>
 
               <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => alert('Teste de email')}>
+                <Button variant="outline" onClick={() => notify.info('Funcionalidade de teste de email em desenvolvimento')}>
                   Testar Configuração
                 </Button>
-                <Button onClick={() => alert('Salvar email')}>
+                <Button onClick={() => notify.info('Funcionalidade de salvar email em desenvolvimento')}>
                   <Save className="h-4 w-4 mr-2" />
                   Salvar Configurações
                 </Button>

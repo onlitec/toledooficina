@@ -254,12 +254,21 @@ def criar_cliente_com_veiculos():
                 else:
                     chassi = None  # Converter string vazia para NULL
                 
+                # Tratar campos integer - converter strings vazias para None
+                def safe_int(value):
+                    if value is None or value == '' or value == 'null':
+                        return None
+                    try:
+                        return int(value) if value else None
+                    except (ValueError, TypeError):
+                        return None
+                
                 veiculo = Veiculo(
                     cliente_id=cliente.id,
                     marca=veiculo_data['marca'],
                     modelo=veiculo_data['modelo'],
-                    ano_fabricacao=veiculo_data.get('ano_fabricacao'),
-                    ano_modelo=veiculo_data.get('ano_modelo'),
+                    ano_fabricacao=safe_int(veiculo_data.get('ano_fabricacao')),
+                    ano_modelo=safe_int(veiculo_data.get('ano_modelo')),
                     cor=veiculo_data.get('cor'),
                     placa=veiculo_data['placa'],
                     chassi=chassi,
@@ -267,7 +276,7 @@ def criar_cliente_com_veiculos():
                     combustivel=veiculo_data.get('combustivel'),
                     motor=veiculo_data.get('motor'),
                     cambio=veiculo_data.get('cambio'),
-                    quilometragem=veiculo_data.get('quilometragem', 0),
+                    quilometragem=safe_int(veiculo_data.get('quilometragem')) or 0,
                     observacoes=veiculo_data.get('observacoes'),
                 )
                 

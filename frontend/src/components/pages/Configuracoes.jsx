@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react'
 import { useSystem } from '@/contexts/SystemContext'
 import { Settings, Building, Mail, Bell, Database, Save, Upload, Eye, EyeOff, MessageCircle, AlertTriangle, Users } from 'lucide-react'
 import { UsersAdmin } from './UsersAdmin'
+import { useNotify } from '../ui/notification'
 
 export function Configuracoes() {
+  const notify = useNotify()
   const [activeTab, setActiveTab] = useState('empresa')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -164,12 +166,12 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Configurações da empresa salvas com sucesso!')
+        notify.success('Configurações da empresa salvas com sucesso!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao salvar configuraeeeees da empresa: ' + error.message)
+      notify.error('Erro ao salvar configurações da empresa: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -188,12 +190,12 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Configurações de email salvas com sucesso!')
+        notify.success('Configurações de email salvas com sucesso!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao salvar configurações de email: ' + error.message)
+      notify.error('Erro ao salvar configurações de email: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -212,12 +214,12 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Email de teste enviado com sucesso!')
+        notify.success('Email de teste enviado com sucesso!')
       } else {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao testar email: ' + error.message)
+      notify.error('Erro ao testar email: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -241,7 +243,7 @@ export function Configuracoes() {
         throw new Error(result.message)
       }
 
-      alert("Configurações do sistema salvas com sucesso!")
+      notify.success("Configurações do sistema salvas com sucesso!")
 
       // Atualizar contexto global
       atualizarTituloEmpresa(sistemaData.titulo_empresa)
@@ -249,7 +251,7 @@ export function Configuracoes() {
       // Recarregar configurações para atualizar outros componentes
       await carregarConfiguracoesDoSistema()
     } catch (error) {
-      alert("Erro ao salvar configurações do sistema: " + error.message)
+      notify.error("Erro ao salvar configurações do sistema: " + error.message)
     } finally {
       setLoading(false)
     }
@@ -268,7 +270,7 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Logotipo enviado com sucesso!')
+        notify.success('Logotipo enviado com sucesso!')
         // Atualizar informações do logotipo
         const logoInfo = {
           tem_logotipo: true,
@@ -285,7 +287,7 @@ export function Configuracoes() {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao enviar logotipo: ' + error.message)
+      notify.error('Erro ao enviar logotipo: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -300,7 +302,7 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
-        alert('Logotipo removido com sucesso!')
+        notify.success('Logotipo removido com sucesso!')
         // Limpar informações do logotipo
         const logoInfo = {
           tem_logotipo: false,
@@ -317,7 +319,7 @@ export function Configuracoes() {
         throw new Error(result.message)
       }
     } catch (error) {
-      alert('Erro ao remover logotipo: ' + error.message)
+      notify.error('Erro ao remover logotipo: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -328,14 +330,14 @@ export function Configuracoes() {
     if (file) {
       // Verificar tamanho do arquivo
       if (file.size > 2 * 1024 * 1024) {
-        alert('Arquivo muito grande. Máximo 2MB.')
+        notify.error('Arquivo muito grande. Máximo 2MB.')
         return
       }
 
       // Verificar tipo do arquivo
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
-        alert('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WebP.')
+        notify.error('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WebP.')
         return
       }
 

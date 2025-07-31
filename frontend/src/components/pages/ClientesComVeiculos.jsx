@@ -11,9 +11,11 @@ import {
   Save,
   ArrowLeft
 } from 'lucide-react'
+import { useNotify } from '../ui/notification'
 
 export function ClientesComVeiculos() {
   const navigate = useNavigate()
+  const notify = useNotify()
   const [loading, setLoading] = useState(false)
   const [clienteData, setClienteData] = useState({
     nome: '',
@@ -29,9 +31,15 @@ export function ClientesComVeiculos() {
     modelo: '',
     placa: '',
     ano_fabricacao: '',
+    ano_modelo: '',
     cor: '',
     chassi: '',
+    renavam: '',
     combustivel: 'gasolina',
+    motor: '',
+    cambio: 'manual',
+    quilometragem: '',
+    observacoes: '',
     fotos: []
   }])
 
@@ -54,9 +62,15 @@ export function ClientesComVeiculos() {
       modelo: '',
       placa: '',
       ano_fabricacao: '',
+      ano_modelo: '',
       cor: '',
       chassi: '',
+      renavam: '',
       combustivel: 'gasolina',
+      motor: '',
+      cambio: 'manual',
+      quilometragem: '',
+      observacoes: '',
       fotos: []
     }])
   }
@@ -73,14 +87,14 @@ export function ClientesComVeiculos() {
       setLoading(true)
 
       if (!clienteData.nome || !clienteData.cpf_cnpj) {
-        alert('Nome e CPF/CNPJ são obrigatórios')
+        notify.error('Nome e CPF/CNPJ são obrigatórios')
         return
       }
 
       for (let i = 0; i < veiculos.length; i++) {
         const veiculo = veiculos[i]
         if (!veiculo.marca || !veiculo.modelo || !veiculo.placa) {
-          alert(`Marca, modelo e placa são obrigatrrrios para o veículo ${i + 1}`)
+          notify.error(`Marca, modelo e placa são obrigatórios para o veículo ${i + 1}`)
           return
         }
       }
@@ -101,14 +115,14 @@ export function ClientesComVeiculos() {
       const result = await response.json()
 
       if (result.success) {
-        alert('Cliente e veículo(s) cadastrados com sucesso!')
+        notify.success('Cliente e veículo(s) cadastrados com sucesso!')
         navigate('/clientes')
       } else {
         throw new Error(result.message)
       }
 
     } catch (error) {
-      alert('Erro ao salvar: ' + error.message)
+      notify.error('Erro ao salvar: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -283,7 +297,7 @@ export function ClientesComVeiculos() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ano
+                    Ano Fabricação
                   </label>
                   <input
                     type="number"
@@ -291,6 +305,19 @@ export function ClientesComVeiculos() {
                     onChange={(e) => handleVeiculoChange(index, 'ano_fabricacao', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="2020"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ano Modelo
+                  </label>
+                  <input
+                    type="number"
+                    value={veiculo.ano_modelo}
+                    onChange={(e) => handleVeiculoChange(index, 'ano_modelo', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="2021"
                   />
                 </div>
 
@@ -322,6 +349,19 @@ export function ClientesComVeiculos() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Renavam
+                  </label>
+                  <input
+                    type="text"
+                    value={veiculo.renavam}
+                    onChange={(e) => handleVeiculoChange(index, 'renavam', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="12345678901"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Combustível
                   </label>
                   <select
@@ -335,6 +375,61 @@ export function ClientesComVeiculos() {
                     <option value="diesel">Diesel</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Motor
+                  </label>
+                  <input
+                    type="text"
+                    value={veiculo.motor}
+                    onChange={(e) => handleVeiculoChange(index, 'motor', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="1.0, 1.6, 2.0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Câmbio
+                  </label>
+                  <select
+                    value={veiculo.cambio}
+                    onChange={(e) => handleVeiculoChange(index, 'cambio', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="manual">Manual</option>
+                    <option value="automatico">Automático</option>
+                    <option value="cvt">CVT</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Quilometragem
+                  </label>
+                  <input
+                    type="number"
+                    value={veiculo.quilometragem}
+                    onChange={(e) => handleVeiculoChange(index, 'quilometragem', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="50000"
+                  />
+                </div>
+              </div>
+
+              {/* Observações do Veículo */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Observações
+                </label>
+                <textarea
+                  value={veiculo.observacoes}
+                  onChange={(e) => handleVeiculoChange(index, 'observacoes', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                  placeholder="Observações sobre o veículo..."
+                />
               </div>
 
               {/* Área de fotos simplificada */}

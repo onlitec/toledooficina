@@ -8,8 +8,10 @@ import {
   ArrowLeft,
   User
 } from 'lucide-react'
+import { useNotify } from '../ui/notification'
 
 export function VeiculoForm({ veiculo, onClose, onSave }) {
+  const notify = useNotify()
   const [loading, setLoading] = useState(false)
   const [clientes, setClientes] = useState([])
   const [fotosPreviews, setFotosPreviews] = useState([])
@@ -62,7 +64,7 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
       // Carregar previews das fotos existentes
       if (veiculo.fotos && veiculo.fotos.length > 0) {
         const previews = veiculo.fotos.map(foto => ({
-          preview: `/static/uploads/veiculos/${foto}`,
+          preview: `http://172.20.120.44:7080/static/uploads/veiculos/${foto}`,
           name: foto,
           existing: true
         }))
@@ -95,13 +97,13 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
     
     files.forEach(file => {
       if (file.size > 5 * 1024 * 1024) {
-        alert('Arquivo muito grande. Máximo 5MB por foto.')
+        notify.error('Arquivo muito grande. Máximo 5MB por foto.')
         return
       }
 
       const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
-        alert('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WEBP.')
+        notify.error('Tipo de arquivo não permitido. Use PNG, JPG, GIF ou WEBP.')
         return
       }
 
@@ -127,7 +129,7 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
       input.onchange = handleFotoUpload
       input.click()
     } else {
-      alert('Câmera não disponível neste dispositivo')
+      notify.error('Câmera não disponível neste dispositivo')
     }
   }
 
@@ -135,18 +137,18 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
     const foto = fotosPreviews[index]
     
     if (foto.existing && veiculo?.id) {
-      // Remover foto existente do servidor
+      // Remover foto existente do servidor - usando backend direto
       try {
         const response = await fetch(`/api/veiculos/${veiculo.id}/fotos/${foto.name}`, {
           method: 'DELETE'
         })
         const result = await response.json()
         if (!result.success) {
-          alert('Erro ao remover foto: ' + result.message)
+          notify.error('Erro ao remover foto: ' + result.message)
           return
         }
       } catch (error) {
-        alert('Erro ao remover foto: ' + error.message)
+        notify.error('Erro ao remover foto: ' + error.message)
         return
       }
     }
@@ -184,7 +186,7 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
 
       // Validar dados obrigatrrrios
       if (!veiculoData.cliente_id || !veiculoData.marca || !veiculoData.modelo || !veiculoData.placa) {
-        alert('Cliente, marca, modelo e placa são obrigatórios')
+        notify.error('Cliente, marca, modelo e placa são obrigatórios')
         return
       }
 
@@ -206,14 +208,14 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
         const veiculoId = veiculo?.id || result.data.id
         await uploadFotosNovas(veiculoId)
         
-        alert(`Veículo ${veiculo?.id ? 'atualizado' : 'cadastrado'} com sucesso!`)
+        notify.success(`Veículo ${veiculo?.id ? 'atualizado' : 'cadastrado'} com sucesso!`)
         onSave()
       } else {
         throw new Error(result.message)
       }
 
     } catch (error) {
-      alert('Erro ao salvar: ' + error.message)
+      notify.error('Erro ao salvar: ' + error.message)
     } finally {
       setLoading(false)
     }
