@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Alert, AlertDescription } from '../ui/alert'
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
 import { useSystem } from '../../contexts/SystemContext'
+import { apiPost } from '../../utils/api'
 
 export function Login() {
   const navigate = useNavigate()
@@ -46,16 +47,10 @@ export function Login() {
         return
       }
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username.trim(),
-          password: formData.password,
-          remember_me: formData.remember_me
-        })
+      const response = await apiPost('/auth/login', {
+        username: formData.username.trim(),
+        password: formData.password,
+        remember_me: formData.remember_me
       })
 
       const data = await response.json()
