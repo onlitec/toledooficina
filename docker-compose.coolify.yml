@@ -6,6 +6,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: erp-oficina-backend
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-backend"
     environment:
       - FLASK_ENV=production
       - FLASK_DEBUG=0
@@ -38,6 +42,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.coolify
     container_name: erp-oficina-frontend
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-frontend"
     environment:
       - VITE_API_URL=https://oficina.onlitec.com.br/api
     depends_on:
@@ -57,6 +65,10 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: erp-oficina-postgres
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=database"
+      - "coolify.name=erp-oficina-postgres"
     environment:
       POSTGRES_DB: erp_oficina
       POSTGRES_USER: erp_user
