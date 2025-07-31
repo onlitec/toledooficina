@@ -1,6 +1,26 @@
-# ERP Oficina - Sistema de Gestão para Oficinas
+# ERP Oficina Toledo
 
-Sistema completo de gestão para oficinas mecânicas desenvolvido com FastAPI (backend) e React (frontend).
+Sistema ERP completo para gestão de oficina mecânica.
+
+## Status do Sistema ✅
+
+O sistema está **FUNCIONANDO** e pronto para uso!
+
+### Acesso ao Sistema
+
+**URL Local**: http://172.20.120.44:7080
+
+### Credenciais de Acesso
+
+**Administrador Principal:**
+- **Usuário**: `AdminSuperUser`
+- **Senha**: `AdM!n@2024#Sec$Pass`
+- **Email**: `admin.super@oficina.com`
+
+**Usuário de Teste:**
+- **Usuário**: `user`
+- **Senha**: `user123`
+- **Email**: `user@oficina.com`
 
 ## 🚀 Funcionalidades
 
