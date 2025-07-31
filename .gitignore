@@ -1,6 +1,10 @@
-
 # Security secrets
 secrets/
 *.key
 *.pem
 *.crt
+
+# Backups
+backup/
+*.tar.gz
+*.sql
