@@ -80,7 +80,7 @@ export function SystemProvider({ children }) {
       const savedRefreshToken = localStorage.getItem('refreshToken')
       const savedUser = localStorage.getItem('user')
 
-      if (savedToken && savedRefreshToken && savedUser) {
+      if (savedToken && savedUser) {
         // Verificar se o token ainda é válido
         const response = await fetch('/api/auth/me', {
           headers: {
@@ -92,10 +92,10 @@ export function SystemProvider({ children }) {
           const data = await response.json()
           setUser(data.user)
           setToken(savedToken)
-          setRefreshToken(savedRefreshToken)
+          setRefreshToken(savedRefreshToken) // pode ser null se não há refresh token
           setIsAuthenticated(true)
-        } else if (response.status === 401) {
-          // Token expirado, tentar renovar
+        } else if (response.status === 401 && savedRefreshToken) {
+          // Token expirado e há refresh token, tentar renovar
           const newToken = await refreshAccessToken()
           if (newToken) {
             // Tentar novamente com o novo token
@@ -115,7 +115,7 @@ export function SystemProvider({ children }) {
             }
           }
         } else {
-          // Outro erro, limpar dados
+          // Token expirado e sem refresh token, ou outro erro
           logout()
         }
       }
@@ -133,8 +133,14 @@ export function SystemProvider({ children }) {
     setRefreshToken(userRefreshToken)
     setIsAuthenticated(true)
     localStorage.setItem('token', accessToken)
-    localStorage.setItem('refreshToken', userRefreshToken)
     localStorage.setItem('user', JSON.stringify(userData))
+    
+    // Só salvar refresh token se ele existir (quando remember_me é true)
+    if (userRefreshToken) {
+      localStorage.setItem('refreshToken', userRefreshToken)
+    } else {
+      localStorage.removeItem('refreshToken')
+    }
   }
 
   const logout = async () => {

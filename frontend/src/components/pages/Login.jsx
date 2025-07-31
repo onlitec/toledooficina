@@ -77,35 +77,7 @@ export function Login() {
     }
   }
 
-  const handleDemoLogin = async (username, password) => {
-    setFormData({ username, password, remember_me: false })
-    setLoading(true)
-    setError('')
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password, remember_me: false })
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        login(data.user, data.access_token, data.refresh_token)
-        navigate('/dashboard')
-      } else {
-        setError(data.message || 'Erro ao fazer login')
-      }
-    } catch (error) {
-      console.error('Erro no login:', error)
-      setError('Erro de conexão. Tente novamente.')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -204,35 +176,7 @@ export function Login() {
               </Button>
             </form>
 
-            {/* Logins de Demonstração */}
-            <div className="mt-6 pt-6 border-t">
-              <p className="text-sm text-gray-600 mb-3 text-center">
-                Contas de demonstração:
-              </p>
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleDemoLogin('Admin', 'admin123')}
-                  disabled={loading}
-                >
-                  🔑 Admin (Admin / admin123)
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => handleDemoLogin('user', 'user123')}
-                  disabled={loading}
-                >
-                  👤 Usuário (user / user123)
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                ⚠️ Altere as senhas padrão em produção
-              </p>
-            </div>
+
           </CardContent>
         </Card>
 

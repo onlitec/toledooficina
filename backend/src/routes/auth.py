@@ -70,7 +70,7 @@ def login():
         
         # Login bem-sucedido
         user.reset_failed_login()
-        access_token, refresh_token = user.generate_tokens()
+        access_token, refresh_token = user.generate_tokens(remember_me=remember_me)
         user.update_last_login()
         
         logger.info(f'Login bem-sucedido: {username}')

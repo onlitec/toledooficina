@@ -71,8 +71,7 @@ def login():
         user.reset_failed_login()
         
         # Gerar tokens
-        access_token = user.generate_token(expires_in=3600 if not remember_me else 86400)  # 1h ou 24h
-        refresh_token = user.generate_refresh_token()
+        access_token, refresh_token = user.generate_tokens(remember_me=remember_me)
         
         # Atualizar último login
         user.update_last_login()

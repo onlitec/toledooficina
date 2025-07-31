@@ -91,10 +91,16 @@ class User(db.Model):
 
         return data
 
-    def generate_tokens(self):
+    def generate_tokens(self, remember_me=False):
         """Gera access token e refresh token"""
-        access_token = self.generate_token(expires_in=900)  # 15 minutos
-        refresh_token = self.generate_refresh_token()
+        if remember_me:
+            # Para "manter conectado": access token de 24h e refresh token de 30 dias
+            access_token = self.generate_token(expires_in=86400)  # 24 horas
+            refresh_token = self.generate_refresh_token(expires_in=2592000)  # 30 dias
+        else:
+            # Para login normal: access token de 15 minutos e refresh token de 7 dias
+            access_token = self.generate_token(expires_in=900)  # 15 minutos
+            refresh_token = self.generate_refresh_token(expires_in=604800)  # 7 dias
         return access_token, refresh_token
     
     def generate_refresh_token(self, expires_in=604800):  # 7 dias
