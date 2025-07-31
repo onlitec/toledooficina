@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { apiRequest as apiRequestUtil } from '@/utils/api'
 
 const SystemContext = createContext()
 
@@ -175,34 +176,7 @@ export function SystemProvider({ children }) {
 
   // Função para fazer requisições autenticadas com renovação automática de token
   const apiRequest = async (url, options = {}) => {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers
-    }
-
-    if (token) {
-      headers.Authorization = `Bearer ${token}`
-    }
-
-    let response = await fetch(url, {
-      ...options,
-      headers
-    })
-
-    // Se receber 401 (não autorizado), tentar renovar o token
-    if (response.status === 401 && refreshToken) {
-      const newToken = await refreshAccessToken()
-      if (newToken) {
-        // Tentar novamente com o novo token
-        headers.Authorization = `Bearer ${newToken}`
-        response = await fetch(url, {
-          ...options,
-          headers
-        })
-      }
-    }
-
-    return response
+    return apiRequestUtil(url, options)
   }
 
   const carregarConfiguracoesDoSistema = async () => {

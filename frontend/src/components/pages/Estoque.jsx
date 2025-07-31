@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useNotify } from '../ui/notification'
 import { useConfirm } from '../ui/confirmation-dialog'
+import { apiGet, apiPost, apiPut, apiDelete } from '@/utils/api'
 
 export function Estoque() {
   const notify = useNotify()
@@ -73,7 +74,7 @@ export function Estoque() {
       if (filtroCategoria) params.append('categoria_id', filtroCategoria)
       if (filtroStatus) params.append('status_estoque', filtroStatus)
       
-      const response = await fetch(`/api/pecas?${params}`)
+      const response = await apiGet(`/pecas?${params}`)
       const result = await response.json()
       
       if (result.success) {
@@ -86,7 +87,7 @@ export function Estoque() {
 
   const carregarCategorias = async () => {
     try {
-      const response = await fetch('/api/categorias')
+      const response = await apiGet('/categorias')
       const result = await response.json()
       
       if (result.success) {
@@ -99,7 +100,7 @@ export function Estoque() {
 
   const carregarResumo = async () => {
     try {
-      const response = await fetch('/api/relatorios/resumo')
+      const response = await apiGet('/relatorios/resumo')
       const result = await response.json()
       
       if (result.success) {
@@ -172,9 +173,7 @@ export function Estoque() {
     
     if (confirmed) {
       try {
-        const response = await fetch(`http://localhost:5000/api/pecas/${id}`, {
-          method: 'DELETE'
-        })
+        const response = await apiDelete(`/pecas/${id}`)
         const result = await response.json()
         
         if (result.success) {
@@ -226,13 +225,9 @@ export function Estoque() {
         preco_venda: parseFloat(pecaData.preco_venda) || 0
       }
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataToSend)
-      })
+      const response = editingPeca?.id
+        ? await apiPut(`/pecas/${editingPeca.id}`, dataToSend)
+        : await apiPost('/pecas', dataToSend)
 
       const result = await response.json()
 

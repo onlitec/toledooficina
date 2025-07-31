@@ -15,7 +15,7 @@ services:
       - FLASK_DEBUG=0
       - POSTGRES_DB=erp_oficina
       - POSTGRES_USER=erp_user
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-"Erp@2024#ProdSecure!9876"}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-"ErpSecure2024"}
       - POSTGRES_HOST=postgres
       - PYTHONPATH=/app/src
       - SECRET_KEY=${SECRET_KEY:-your-default-secret-key-change-in-production}
@@ -72,7 +72,7 @@ services:
     environment:
       POSTGRES_DB: erp_oficina
       POSTGRES_USER: erp_user
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-"Erp@2024#ProdSecure!9876"}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-"ErpSecure2024"}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -97,8 +97,10 @@ services:
       - "traefik.http.routers.erp-oficina.tls=true"
       - "traefik.http.routers.erp-oficina.tls.certresolver=letsencrypt"
       - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
+    ports:
+      - "80:80"
     volumes:
-      - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/logs:/var/log/nginx
     depends_on:
       frontend:

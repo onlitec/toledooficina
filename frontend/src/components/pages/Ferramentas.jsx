@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useNotify } from '@/components/ui/notification'
 import { useConfirm } from '@/components/ui/confirmation-dialog'
+import { apiGet, apiPost, apiPut, apiDelete } from '@/utils/api'
 
 export function Ferramentas() {
   const notify = useNotify()
@@ -62,8 +63,7 @@ export function Ferramentas() {
       if (searchTerm) params.append('search', searchTerm)
       if (filtroStatus) params.append('status', filtroStatus)
       
-      const response = await fetch(`/api/ferramentas?${params}`)
-      const data = await response.json()
+      const data = await apiGet(`/ferramentas?${params}`)
       setFerramentas(data)
     } catch (error) {
       console.error('Erro ao carregar ferramentas:', error)
@@ -74,8 +74,7 @@ export function Ferramentas() {
 
   const loadEstatisticas = async () => {
     try {
-      const response = await fetch('/api/ferramentas/estatisticas')
-      const data = await response.json()
+      const data = await apiGet('/ferramentas/estatisticas')
       setEstatisticas(data)
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error)
@@ -144,31 +143,18 @@ export function Ferramentas() {
 
       // Código não é mais obrigatório - será gerado automaticamente se vazio
 
-      const url = editingFerramenta?.id
-        ? `/api/ferramentas/${editingFerramenta.id}`
-        : '/api/ferramentas'
-
-      const method = editingFerramenta?.id ? 'PUT' : 'POST'
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(ferramentaData)
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        notify.success(editingFerramenta?.id ? 'Ferramenta atualizada com sucesso!' : 'Ferramenta cadastrada com sucesso!')
-        setShowForm(false)
-        setEditingFerramenta(null)
-        loadFerramentas()
-        loadEstatisticas()
+      if (editingFerramenta?.id) {
+        await apiPut(`/ferramentas/${editingFerramenta.id}`, ferramentaData)
+        notify.success('Ferramenta atualizada com sucesso!')
       } else {
-        throw new Error(result.error || result.message)
+        await apiPost('/ferramentas', ferramentaData)
+        notify.success('Ferramenta cadastrada com sucesso!')
       }
+      
+      setShowForm(false)
+      setEditingFerramenta(null)
+      loadFerramentas()
+      loadEstatisticas()
 
     } catch (error) {
       notify.error('Erro ao salvar ferramenta: ' + error.message)
@@ -182,18 +168,10 @@ export function Ferramentas() {
     if (!confirmed) return
     
     try {
-      const response = await fetch(`http://localhost:5000/api/ferramentas/${id}`, {
-        method: 'DELETE'
-      })
-      
-      if (response.ok) {
-        notify.success('Ferramenta removida com sucesso!')
-        loadFerramentas()
-        loadEstatisticas()
-      } else {
-        const error = await response.json()
-        notify.error(error.error || 'Erro ao remover ferramenta')
-      }
+      await apiDelete(`/ferramentas/${id}`)
+      notify.success('Ferramenta removida com sucesso!')
+      loadFerramentas()
+      loadEstatisticas()
     } catch (error) {
       console.error('Erro ao remover ferramenta:', error)
       notify.error('Erro ao remover ferramenta')
@@ -202,24 +180,12 @@ export function Ferramentas() {
 
   const handleEmprestimo = async (formData) => {
     try {
-      const response = await fetch(`/api/ferramentas/${selectedFerramenta.id}/emprestimo`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
-      
-      if (response.ok) {
-        notify.success('Empréstimo registrado com sucesso!')
-        setShowEmprestimoForm(false)
-        setSelectedFerramenta(null)
-        loadFerramentas()
-        loadEstatisticas()
-      } else {
-        const error = await response.json()
-        notify.error(error.error || 'Erro ao registrar empréstimo')
-      }
+      await apiPost(`/ferramentas/${selectedFerramenta.id}/emprestimo`, formData)
+      notify.success('Empréstimo registrado com sucesso!')
+      setShowEmprestimoForm(false)
+      setSelectedFerramenta(null)
+      loadFerramentas()
+      loadEstatisticas()
     } catch (error) {
       console.error('Erro ao registrar empréstimo:', error)
       notify.error('Erro ao registrar empréstimo')
@@ -231,18 +197,10 @@ export function Ferramentas() {
     if (!confirmed) return
     
     try {
-      const response = await fetch(`/api/ferramentas/${id}/devolucao`, {
-        method: 'POST'
-      })
-      
-      if (response.ok) {
-        notify.success('Devolução registrada com sucesso!')
-        loadFerramentas()
-        loadEstatisticas()
-      } else {
-        const error = await response.json()
-        notify.error(error.error || 'Erro ao registrar devolução')
-      }
+      await apiPost(`/ferramentas/${id}/devolucao`, {})
+      notify.success('Devolução registrada com sucesso!')
+      loadFerramentas()
+      loadEstatisticas()
     } catch (error) {
       console.error('Erro ao registrar devolução:', error)
       notify.error('Erro ao registrar devolução')
@@ -251,24 +209,12 @@ export function Ferramentas() {
 
   const handleManutencao = async (formData) => {
     try {
-      const response = await fetch(`/api/ferramentas/${selectedFerramenta.id}/manutencao`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
-      
-      if (response.ok) {
-        notify.success('Manutenção registrada com sucesso!')
-        setShowManutencaoForm(false)
-        setSelectedFerramenta(null)
-        loadFerramentas()
-        loadEstatisticas()
-      } else {
-        const error = await response.json()
-        notify.error(error.error || 'Erro ao registrar manutenção')
-      }
+      await apiPost(`/ferramentas/${selectedFerramenta.id}/manutencao`, formData)
+      notify.success('Manutenção registrada com sucesso!')
+      setShowManutencaoForm(false)
+      setSelectedFerramenta(null)
+      loadFerramentas()
+      loadEstatisticas()
     } catch (error) {
       console.error('Erro ao registrar manutenção:', error)
       notify.error('Erro ao registrar manutenção')

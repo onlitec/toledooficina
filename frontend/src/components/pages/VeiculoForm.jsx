@@ -9,6 +9,7 @@ import {
   User
 } from 'lucide-react'
 import { useNotify } from '../ui/notification'
+import { apiGet, apiPost, apiPut, apiDelete, apiUpload } from '@/utils/api'
 
 export function VeiculoForm({ veiculo, onClose, onSave }) {
   const notify = useNotify()
@@ -75,8 +76,7 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
 
   const carregarClientes = async () => {
     try {
-      const response = await fetch('/api/clientes')
-      const result = await response.json()
+      const result = await apiGet('/clientes')
       if (result.success) {
         setClientes(result.data)
       }
@@ -137,12 +137,9 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
     const foto = fotosPreviews[index]
     
     if (foto.existing && veiculo?.id) {
-      // Remover foto existente do servidor - usando backend direto
+      // Remover foto existente do servidor
       try {
-        const response = await fetch(`/api/veiculos/${veiculo.id}/fotos/${foto.name}`, {
-          method: 'DELETE'
-        })
-        const result = await response.json()
+        const result = await apiDelete(`/veiculos/${veiculo.id}/fotos/${foto.name}`)
         if (!result.success) {
           notify.error('Erro ao remover foto: ' + result.message)
           return
@@ -166,11 +163,7 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
       formData.append('foto', foto.file)
       
       try {
-        const response = await fetch(`/api/veiculos/${veiculoId}/fotos`, {
-          method: 'POST',
-          body: formData
-        })
-        const result = await response.json()
+        const result = await apiUpload(`/veiculos/${veiculoId}/fotos`, formData)
         if (!result.success) {
           console.error('Erro ao fazer upload da foto:', result.message)
         }
@@ -190,18 +183,12 @@ export function VeiculoForm({ veiculo, onClose, onSave }) {
         return
       }
 
-      const url = veiculo?.id ? `/api/veiculos/${veiculo.id}` : '/api/veiculos'
-      const method = veiculo?.id ? 'PUT' : 'POST'
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(veiculoData)
-      })
-
-      const result = await response.json()
+      let result
+      if (veiculo?.id) {
+        result = await apiPut(`/veiculos/${veiculo.id}`, veiculoData)
+      } else {
+        result = await apiPost('/veiculos', veiculoData)
+      }
 
       if (result.success) {
         // Upload das fotos novas

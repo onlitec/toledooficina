@@ -49,6 +49,7 @@ export function Clientes() {
   }])
 
   const [fotosPreviews, setFotosPreviews] = useState([])
+  const [loadingCEP, setLoadingCEP] = useState(false)
 
   useEffect(() => {
     carregarClientes()
@@ -372,6 +373,47 @@ export function Clientes() {
     }
   }
 
+  const buscarCEP = async (cep) => {
+    const cepLimpo = cep.replace(/\D/g, '')
+    
+    if (cepLimpo.length === 8) {
+      setLoadingCEP(true)
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+        const data = await response.json()
+        
+        if (!data.erro) {
+          setClienteData(prev => ({
+            ...prev,
+            endereco: data.logradouro || '',
+            bairro: data.bairro || '',
+            cidade: data.localidade || '',
+            estado: data.uf || ''
+          }))
+          notify.success('Endereço carregado automaticamente!')
+        } else {
+          notify.error('CEP não encontrado')
+        }
+      } catch (error) {
+        notify.error('Erro ao buscar CEP')
+        console.error('Erro ao buscar CEP:', error)
+      } finally {
+        setLoadingCEP(false)
+      }
+    }
+  }
+
+  const handleCEPChange = (value) => {
+    const formattedCEP = value.replace(/\D/g, '').replace(/(\d{5})(\d{3})/, '$1-$2')
+    handleClienteChange('cep', formattedCEP)
+    
+    // Buscar automaticamente quando o CEP estiver completo
+    const cepLimpo = value.replace(/\D/g, '')
+    if (cepLimpo.length === 8) {
+      buscarCEP(cepLimpo)
+    }
+  }
+
   const filteredClientes = clientes.filter(cliente =>
     cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cliente.cpf_cnpj.includes(searchTerm) ||
@@ -589,14 +631,28 @@ export function Clientes() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   CEP
+                  {loadingCEP && (
+                    <span className="ml-2 text-blue-600 text-xs">
+                      Buscando endereço...
+                    </span>
+                  )}
                 </label>
-                <input
-                  type="text"
-                  value={clienteData.cep}
-                  onChange={(e) => handleClienteChange('cep', e.target.value.replace(/\D/g, '').replace(/(\d{5})(\d{3})/, '$1-$2'))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="00000-000"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={clienteData.cep}
+                    onChange={(e) => handleCEPChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="00000-000"
+                    maxLength="9"
+                    disabled={loadingCEP}
+                  />
+                  {loadingCEP && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from '@/components/ui/use-toast'
 import { useNotify } from '../ui/notification'
+import { apiGet, apiPut } from '@/utils/api'
 
 export function ConfiguracoesCompletas() {
   const notify = useNotify()
@@ -58,21 +59,15 @@ export function ConfiguracoesCompletas() {
       setLoading(true)
       
       // Carregar configurações da empresa
-      const empresaResponse = await fetch('/api/configuracoes/empresa')
-      if (empresaResponse.ok) {
-        const empresaResult = await empresaResponse.json()
-        if (empresaResult.success) {
-          setEmpresaData(empresaResult.data)
-        }
+      const empresaResult = await apiGet('/configuracoes/empresa')
+      if (empresaResult.success) {
+        setEmpresaData(empresaResult.data)
       }
 
-      // Carregar configuraçeeeees de email
-      const emailResponse = await fetch('/api/configuracoes/email')
-      if (emailResponse.ok) {
-        const emailResult = await emailResponse.json()
-        if (emailResult.success) {
-          setEmailData(emailResult.data)
-        }
+      // Carregar configurações de email
+      const emailResult = await apiGet('/configuracoes/email')
+      if (emailResult.success) {
+        setEmailData(emailResult.data)
       }
 
     } catch (error) {
@@ -85,15 +80,7 @@ export function ConfiguracoesCompletas() {
   const salvarEmpresa = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/configuracoes/empresa', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(empresaData)
-      })
-
-      const result = await response.json()
+      const result = await apiPut('/configuracoes/empresa', empresaData)
       if (result.success) {
         notify.success('Configurações da empresa salvas com sucesso!')
       } else {
