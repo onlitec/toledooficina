@@ -35,6 +35,10 @@ export function Header({ sidebarOpen, setSidebarOpen }) {
     }
   }
 
+  const handlePerfil = () => {
+    navigate('/perfil')
+  }
+
   const getRoleColor = (role) => {
     switch (role) {
       case 'admin': return 'bg-red-100 text-red-800'
@@ -122,11 +126,11 @@ export function Header({ sidebarOpen, setSidebarOpen }) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handlePerfil}>
                 <User className="mr-2 h-4 w-4" />
                 Perfil
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sair
               </DropdownMenuItem>

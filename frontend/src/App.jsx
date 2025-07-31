@@ -21,6 +21,7 @@ import { OrdensServico } from '@/components/pages/OrdensServico'
 import { Financeiro } from '@/components/pages/Financeiro'
 import { Relatorios } from '@/components/pages/Relatorios'
 import { Configuracoes } from '@/components/pages/Configuracoes'
+import { Perfil } from '@/components/pages/Perfil'
 import './App.css'
 
 // Componente principal da aplicação autenticada
@@ -51,6 +52,7 @@ function AuthenticatedApp() {
                 <Configuracoes />
               </AdminRoute>
             } />
+            <Route path="/perfil" element={<Perfil />} />
           </Routes>
         </main>
       </div>

@@ -8,3 +8,13 @@ secrets/
 backup/
 *.tar.gz
 *.sql
+
+# Docker data and cache
+data/
+nginx/cache/
+nginx/logs/
+backends/
+instance/
+logs/
+*.db
+*.log
