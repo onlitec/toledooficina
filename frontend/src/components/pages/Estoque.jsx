@@ -74,8 +74,7 @@ export function Estoque() {
       if (filtroCategoria) params.append('categoria_id', filtroCategoria)
       if (filtroStatus) params.append('status_estoque', filtroStatus)
       
-      const response = await apiGet(`/pecas?${params}`)
-      const result = await response.json()
+      const result = await apiGet(`/pecas?${params}`)
       
       if (result.success) {
         setPecas(result.data)
@@ -87,8 +86,7 @@ export function Estoque() {
 
   const carregarCategorias = async () => {
     try {
-      const response = await apiGet('/categorias')
-      const result = await response.json()
+      const result = await apiGet('/categorias')
       
       if (result.success) {
         setCategorias(result.data)
@@ -100,8 +98,7 @@ export function Estoque() {
 
   const carregarResumo = async () => {
     try {
-      const response = await apiGet('/relatorios/resumo')
-      const result = await response.json()
+      const result = await apiGet('/relatorios/resumo')
       
       if (result.success) {
         setResumo(result.data)
@@ -173,8 +170,7 @@ export function Estoque() {
     
     if (confirmed) {
       try {
-        const response = await apiDelete(`/pecas/${id}`)
-        const result = await response.json()
+        const result = await apiDelete(`/pecas/${id}`)
         
         if (result.success) {
           notify.success('Peça excluída com sucesso!')
@@ -225,11 +221,9 @@ export function Estoque() {
         preco_venda: parseFloat(pecaData.preco_venda) || 0
       }
 
-      const response = editingPeca?.id
+      const result = editingPeca?.id
         ? await apiPut(`/pecas/${editingPeca.id}`, dataToSend)
         : await apiPost('/pecas', dataToSend)
-
-      const result = await response.json()
 
       if (result.success) {
         notify.success(editingPeca?.id ? 'Peça atualizada com sucesso!' : 'Peça cadastrada com sucesso!')

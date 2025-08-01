@@ -43,7 +43,7 @@ def create_app():
         app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
 
     # Habilitar CORS para todas as rotas
-    CORS(app, origins=['http://localhost:7080', 'http://127.0.0.1:7080'], supports_credentials=True)
+    CORS(app, origins=['http://localhost:7080', 'http://127.0.0.1:7080', 'http://172.20.120.44:7080'], supports_credentials=True)
 
     # Configuração do banco de dados
     # Verificar se estamos usando PostgreSQL (produção) ou SQLite (desenvolvimento)

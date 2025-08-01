@@ -110,11 +110,11 @@ def init_database():
         if not config_email:
             print("📧 Criando configuração de email...")
             config_email = ConfiguracaoEmail(
-                smtp_servidor='smtp.gmail.com',
-                smtp_porta=587,
-                smtp_usuario='seu-email@gmail.com',
-                smtp_senha='sua-senha-app',
-                smtp_tls=True,
+                servidor_smtp='smtp.gmail.com',
+                porta_smtp=587,
+                usuario_email='seu-email@gmail.com',
+                senha_email='sua-senha-app',
+                usar_tls=True,
                 email_remetente='seu-email@gmail.com',
                 nome_remetente='Oficina Mecânica ERP'
             )
@@ -130,7 +130,7 @@ def init_database():
             config_notif = ConfiguracaoNotificacao(
                 notificar_ordem_criada=True,
                 notificar_ordem_concluida=True,
-                notificar_vencimento_conta=True,
+                notificar_contas_vencer=True,
                 notificar_estoque_baixo=True,
                 emails_notificacao='admin@oficina.com'
             )
@@ -139,21 +139,31 @@ def init_database():
         else:
             print("   ℹ️ Configuração de notificações já existe")
         
-        # Criar configuração do sistema se não existir
-        config_sistema = ConfiguracaoSistema.query.first()
-        if not config_sistema:
-            print("⚙️ Criando configuração do sistema...")
-            config_sistema = ConfiguracaoSistema(
-                nome_sistema='ERP Oficina Mecânica',
-                versao='1.0.0',
-                manutencao=False,
-                backup_automatico=True,
-                intervalo_backup=24
-            )
-            db.session.add(config_sistema)
-            print("   ✅ Configuração do sistema criada")
-        else:
-            print("   ℹ️ Configuração do sistema já existe")
+        # Criar configurações do sistema se não existirem
+        print("⚙️ Criando configurações do sistema...")
+        
+        # Verificar e criar configurações individuais
+        configs_sistema = [
+            {'chave': 'nome_sistema', 'valor': 'ERP Oficina Mecânica', 'tipo': 'string', 'descricao': 'Nome do sistema'},
+            {'chave': 'versao', 'valor': '1.0.0', 'tipo': 'string', 'descricao': 'Versão do sistema'},
+            {'chave': 'manutencao', 'valor': 'false', 'tipo': 'boolean', 'descricao': 'Sistema em manutenção'},
+            {'chave': 'backup_automatico', 'valor': 'true', 'tipo': 'boolean', 'descricao': 'Realizar backup automático'},
+            {'chave': 'intervalo_backup', 'valor': '24', 'tipo': 'integer', 'descricao': 'Intervalo de backup em horas'}
+        ]
+        
+        for config in configs_sistema:
+            existing_config = ConfiguracaoSistema.query.filter_by(chave=config['chave']).first()
+            if not existing_config:
+                new_config = ConfiguracaoSistema(
+                    chave=config['chave'],
+                    valor=config['valor'],
+                    tipo=config['tipo'],
+                    descricao=config['descricao']
+                )
+                db.session.add(new_config)
+                print(f"   ✅ Configuração '{config['chave']}' criada")
+            else:
+                print(f"   ℹ️ Configuração '{config['chave']}' já existe")
         
         try:
             db.session.commit()

@@ -46,27 +46,39 @@ export function SystemProvider({ children }) {
     try {
       const savedRefreshToken = localStorage.getItem('refreshToken')
       if (!savedRefreshToken) {
-        throw new Error('Refresh token não encontrado')
+        console.warn('Refresh token não encontrado')
+        logout()
+        return null
       }
 
       const response = await fetch('/api/auth/refresh', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          refresh_token: savedRefreshToken
-        })
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${savedRefreshToken}`
+        }
       })
 
       if (response.ok) {
-        const data = await response.json()
-        setToken(data.access_token)
-        localStorage.setItem('token', data.access_token)
-        return data.access_token
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const data = await response.json()
+          if (data.success && data.data.access_token) {
+            const newToken = data.data.access_token
+            setToken(newToken)
+            localStorage.setItem('token', newToken)
+            return newToken
+          }
+        } else {
+          console.error('Resposta de refresh não é JSON válido')
+        }
       } else {
-        throw new Error('Falha ao renovar token')
+        console.warn('Falha na renovação do token:', response.status)
       }
+
+      // Se chegou aqui, houve falha na renovação
+      logout()
+      return null
     } catch (error) {
       console.error('Erro ao renovar token:', error)
       logout()
@@ -186,28 +198,47 @@ export function SystemProvider({ children }) {
       // Carregar título da empresa
       const tituloResponse = await apiRequest('/api/configuracoes/sistema/titulo')
       if (tituloResponse.ok) {
-        const tituloResult = await tituloResponse.json()
-        if (tituloResult.success) {
-          setSystemConfig(prev => ({
-            ...prev,
-            titulo_empresa: tituloResult.data.titulo
-          }))
+        const contentType = tituloResponse.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const tituloResult = await tituloResponse.json()
+          if (tituloResult.success) {
+            setSystemConfig(prev => ({
+              ...prev,
+              titulo_empresa: tituloResult.data.titulo
+            }))
+          }
+        } else {
+          console.warn('Resposta não é JSON válido para título da empresa')
         }
+      } else {
+        console.warn('Erro ao carregar título da empresa:', tituloResponse.status)
       }
 
       // Carregar informações do logotipo
       const logoResponse = await apiRequest('/api/configuracoes/sistema/logotipo')
       if (logoResponse.ok) {
-        const logoResult = await logoResponse.json()
-        if (logoResult.success) {
-          setSystemConfig(prev => ({
-            ...prev,
-            logotipo_info: logoResult.data
-          }))
+        const contentType = logoResponse.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          const logoResult = await logoResponse.json()
+          if (logoResult.success) {
+            setSystemConfig(prev => ({
+              ...prev,
+              logotipo_info: logoResult.data
+            }))
+          }
+        } else {
+          console.warn('Resposta não é JSON válido para logotipo')
         }
+      } else {
+        console.warn('Erro ao carregar logotipo:', logoResponse.status)
       }
     } catch (error) {
       console.error('Erro ao carregar configurações do sistema:', error)
+      // Se houver erro de autenticação, tentar fazer logout
+      if (error.message && error.message.includes('401')) {
+        console.log('Erro de autenticação detectado, fazendo logout...')
+        logout()
+      }
     } finally {
       setLoading(false)
     }
