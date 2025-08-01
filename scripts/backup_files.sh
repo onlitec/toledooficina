@@ -1,59 +1,52 @@
 #!/bin/bash
 
-# Script para backup dos arquivos do projeto ToledoOficina
-# Complementa o script backup.sh existente
+# Script para backup de arquivos do sistema ToledoOficina
+# Este script cria um arquivo compactado com os arquivos do projeto
+# Autor: ToledoOficina Team
+# Data: 01/08/2025
 
-set -e
-
-# Configurações
-BACKUP_DIR="./backups"
+# Definir variáveis
+BACKUP_DIR="$(pwd)/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-BACKUP_FILENAME="toledooficina_backup_${TIMESTAMP}.tar.gz"
+BACKUP_FILE="${BACKUP_DIR}/toledooficina_backup_${TIMESTAMP}.tar.gz"
+PROJECT_ROOT="$(pwd)"
 
-# Cores para output
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-NC='\033[0m'
+# Verificar se o diretório de backup existe, se não, criar
+if [ ! -d "$BACKUP_DIR" ]; then
+    mkdir -p "$BACKUP_DIR"
+    echo "Diretório de backup criado: $BACKUP_DIR"
+fi
 
-# Função para exibir progresso
-echo -e "${BLUE}[$(date +%H:%M:%S)]${NC} Iniciando backup dos arquivos do projeto..."
+# Criar o arquivo de backup
+echo "Iniciando backup em: $(date)"
+echo "Criando arquivo de backup: $BACKUP_FILE"
 
-# Criar diretório de backup se não existir
-mkdir -p "$BACKUP_DIR"
-
-# Executar o backup
-echo -e "${BLUE}[$(date +%H:%M:%S)]${NC} Compactando arquivos..."
-
-tar -czvf "${BACKUP_DIR}/${BACKUP_FILENAME}" \
-  --exclude=".git" \
-  --exclude="venv" \
-  --exclude="node_modules" \
-  --exclude="__pycache__" \
-  --exclude="*.pyc" \
-  --exclude="data" \
-  --exclude="logs" \
-  --exclude="backup" \
-  --exclude="backup_old" \
-  --exclude="backups" \
-  --exclude="instance" \
-  --exclude="secrets" \
-  --exclude="nginx/cache" \
-  backend frontend nginx scripts docker-compose.yml .env README.md
+# Compactar os arquivos do projeto, excluindo diretórios desnecessários
+tar -czf "$BACKUP_FILE" \
+    --exclude=".git" \
+    --exclude="venv" \
+    --exclude="node_modules" \
+    --exclude="__pycache__" \
+    --exclude="data" \
+    --exclude="logs" \
+    --exclude="backup" \
+    --exclude="backup_old" \
+    --exclude="instance" \
+    --exclude="secrets" \
+    --exclude="nginx/cache" \
+    --exclude="backups" \
+    -C "$PROJECT_ROOT" \
+    backend frontend nginx scripts docker-compose.yml .env README.md
 
 # Verificar se o backup foi criado com sucesso
-if [ -f "${BACKUP_DIR}/${BACKUP_FILENAME}" ]; then
-  FILESIZE=$(du -h "${BACKUP_DIR}/${BACKUP_FILENAME}" | cut -f1)
-  echo -e "${GREEN}✅ Backup concluído com sucesso: ${BACKUP_DIR}/${BACKUP_FILENAME} (${FILESIZE})${NC}"
-  
-  # Listar backups existentes
-  echo -e "\nBackups disponíveis:"
-  ls -lh "${BACKUP_DIR}" | grep ".tar.gz"
-  
-  # Mostrar comando para restauração
-  echo -e "\nPara restaurar este backup, use:\n"
-  echo -e "tar -xzvf ${BACKUP_DIR}/${BACKUP_FILENAME} -C /caminho/para/restauracao\n"
+if [ $? -eq 0 ]; then
+    echo "Backup concluído com sucesso: $BACKUP_FILE"
+    echo "Tamanho do arquivo: $(du -h "$BACKUP_FILE" | cut -f1)"
+    echo "Para restaurar o backup, use o comando:"
+    echo "tar -xzf $BACKUP_FILE -C /caminho/para/restauracao"
 else
-  echo -e "${RED}❌ Falha ao criar o backup${NC}"
-  exit 1
+    echo "Erro ao criar o backup!"
+    exit 1
 fi
+
+echo "Backup finalizado em: $(date)"

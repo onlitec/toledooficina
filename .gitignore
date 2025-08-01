@@ -7,6 +7,8 @@ secrets/
 # Backups
 backup/
 backup_old/
+backups/*.tar.gz
+backups/
 *.tar.gz
 *.sql
 
