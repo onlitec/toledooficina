@@ -394,7 +394,6 @@ def info_sistema():
 
 
 @configuracao_bp.route('/configuracoes/sistema/titulo', methods=['GET'])
-@token_required
 def obter_titulo_empresa():
     """Obtém o título da empresa"""
     try:
@@ -458,7 +457,6 @@ def atualizar_titulo_empresa():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @configuracao_bp.route('/configuracoes/sistema/logotipo', methods=['GET'])
-@token_required
 def obter_logotipo_empresa():
     """Obtém informações do logotipo da empresa"""
     try:
