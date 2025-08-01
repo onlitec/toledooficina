@@ -46,7 +46,7 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.coolify
     container_name: frontend-${COOLIFY_CONTAINER_NAME:-local}
     environment:
       - REACT_APP_API_URL=http://localhost:5000
@@ -73,8 +73,7 @@ services:
       - "traefik.http.routers.erp-oficina.tls.certresolver=letsencrypt"
       - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "80:80"
     depends_on:
