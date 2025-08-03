@@ -96,10 +96,10 @@ export function SystemProvider({ children }) {
       if (savedToken && savedUser) {
         // Verificar se o token ainda é válido
         const response = await fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${savedToken}`
-          }
-        })
+            headers: {
+              'Authorization': `Bearer ${savedToken}`
+            }
+          })
 
         if (response.ok) {
           const data = await response.json()
