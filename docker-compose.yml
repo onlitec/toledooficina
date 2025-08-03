@@ -48,10 +48,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.coolify
+      args:
+        - Pass=${Pass:-}
     container_name: frontend-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}
     environment:
       - REACT_APP_API_URL=https://${COOLIFY_FQDN:-localhost}
       - REACT_APP_BACKEND_URL=https://${COOLIFY_FQDN:-localhost}
+      - Pass=${Pass:-}
     # Remover mapeamento de porta para Coolify
     expose:
       - "7080"

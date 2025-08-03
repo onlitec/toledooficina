@@ -1,6 +1,10 @@
 # Multi-stage build for React app
 FROM node:20-alpine AS builder
 
+# Accept Pass argument
+ARG Pass
+ENV Pass=${Pass}
+
 # Set working directory
 WORKDIR /app
 
