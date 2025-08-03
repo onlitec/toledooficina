@@ -67,7 +67,9 @@ services:
     container_name: nginx-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}
     volumes:
       - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
-    # IMPORTANTE: Remover mapeamento de porta 80 para evitar conflitos
+    # Mapeamento de porta para acesso local
+    ports:
+      - "7080:80"
     expose:
       - "80"
     depends_on:
