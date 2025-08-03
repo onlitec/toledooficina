@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
-    container_name: postgres-${COOLIFY_CONTAINER_NAME:-local}
+    container_name: postgres-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-oficina_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -24,7 +24,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: backend-${COOLIFY_CONTAINER_NAME:-local}
+    container_name: backend-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}
     environment:
       - FLASK_ENV=production
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
@@ -32,9 +32,10 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=${POSTGRES_DB:-oficina_db}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-here}
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:7080,https://${COOLIFY_FQDN:-localhost}
-    ports:
-      - "5000:5000"
+      - CORS_ORIGINS=https://${COOLIFY_FQDN:-localhost},http://localhost:3000
+    # Remover mapeamento de porta para Coolify
+    expose:
+      - "5000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,12 +48,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.coolify
-    container_name: frontend-${COOLIFY_CONTAINER_NAME:-local}
+    container_name: frontend-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}
     environment:
-      - REACT_APP_API_URL=http://localhost:5000
-      - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL:-http://localhost:5000}
-    ports:
-      - "7080:7080"
+      - REACT_APP_API_URL=https://${COOLIFY_FQDN:-localhost}
+      - REACT_APP_BACKEND_URL=https://${COOLIFY_FQDN:-localhost}
+    # Remover mapeamento de porta para Coolify
+    expose:
+      - "7080"
     depends_on:
       - backend
     networks:
@@ -62,20 +64,12 @@ services:
 
   nginx:
     image: nginx:alpine
-    container_name: erp-oficina-nginx
-    labels:
-      - "coolify.managed=true"
-      - "coolify.type=application"
-      - "coolify.name=erp-oficina-nginx"
-      - "traefik.enable=true"
-      - "traefik.http.routers.erp-oficina.rule=Host(`oficina.onlitec.com.br`)"
-      - "traefik.http.routers.erp-oficina.tls=true"
-      - "traefik.http.routers.erp-oficina.tls.certresolver=letsencrypt"
-      - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
+    container_name: nginx-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}
     volumes:
       - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
-    ports:
-      - "80:80"
+    # IMPORTANTE: Remover mapeamento de porta 80 para evitar conflitos
+    expose:
+      - "80"
     depends_on:
       - backend
       - frontend
@@ -86,6 +80,16 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - "coolify.managed=true"
+      - "coolify.type=application"
+      - "coolify.name=erp-oficina-nginx"
+      # Labels do Traefik para roteamento automático
+      - "traefik.enable=true"
+      - "traefik.http.routers.erp-oficina.rule=Host(`${COOLIFY_FQDN:-oficina.onlitec.com.br}`)"
+      - "traefik.http.routers.erp-oficina.tls=true"
+      - "traefik.http.routers.erp-oficina.tls.certresolver=letsencrypt"
+      - "traefik.http.services.erp-oficina.loadbalancer.server.port=80"
 
 volumes:
   postgres_data:
