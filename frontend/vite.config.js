@@ -16,9 +16,10 @@ export default defineConfig({
     port: 7080,
     proxy: {
       '/api': {
-        target: 'http://localhost:7080',
+        target: 'http://127.0.0.1:7080',
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path,
       },
     },
   },

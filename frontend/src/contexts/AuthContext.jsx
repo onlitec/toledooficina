@@ -5,7 +5,8 @@ export function useAuth() {
 
   const login = async (username, password, rememberMe = false) => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
