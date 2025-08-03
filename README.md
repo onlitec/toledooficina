@@ -6,10 +6,6 @@ Sistema ERP completo para gestão de oficina mecânica.
 
 O sistema está **FUNCIONANDO** e pronto para uso!
 
-### Acesso ao Sistema
-
-**URL Local**: http://172.20.120.44:7080
-
 ### Credenciais de Acesso
 
 **Administrador Principal:**
