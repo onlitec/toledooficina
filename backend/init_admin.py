@@ -53,11 +53,11 @@ def init_admin_postgresql():
                    username = 'AdminSuperUser', 
                    email = 'admin.super@oficina.com', 
                    nome_completo = 'Administrador do Sistema',
-                   password_hash = ?, 
+                   password_hash = %s, 
                    role = 'admin', 
                    ativo = 1,
                    failed_login_attempts = 0
-                   WHERE id = ?;""",
+                   WHERE id = %s;""",
                 (password_hash, admin_exists[0])
             )
         else:
