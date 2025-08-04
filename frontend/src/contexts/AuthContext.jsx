@@ -17,14 +17,23 @@ export function useAuth() {
         })
       })
 
+      if (!response.ok) {
+        throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`)
+      }
+
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Resposta não é JSON válido')
+      }
+
       const data = await response.json()
 
-      if (response.ok && data.success) {
+      if (data.success) {
         // Usar a função login do SystemContext para salvar os dados
         setLoginData(data.user, data.access_token, data.refresh_token)
         return data
       } else {
-        throw new Error(data.message || 'Erro na requisição: ' + response.status)
+        throw new Error(data.message || 'Erro de autenticação')
       }
     } catch (error) {
       console.error('Erro no login:', error)
