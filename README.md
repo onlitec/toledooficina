@@ -1,75 +1,116 @@
-# ERP Oficina Toledo
+# Sistema de Gestão para Oficina Mecânica
 
-Sistema ERP completo para gestão de oficina mecânica.
+Sistema completo de gestão para oficinas mecânicas desenvolvido com Flask (backend) e React (frontend).
 
-## Status do Sistema ✅
+## Funcionalidades
 
-O sistema está **FUNCIONANDO** e pronto para uso!
+- **Gestão de Clientes**: Cadastro, edição e consulta de clientes
+- **Gestão de Veículos**: Controle completo do cadastro de veículos
+- **Sistema de Autenticação**: Login seguro com JWT tokens
+- **Interface Responsiva**: Design moderno e adaptável
+- **Upload de Imagens**: Suporte para fotos de veículos
+- **Configurações do Sistema**: Personalização de títulos e configurações
 
-### Credenciais de Acesso
+## Tecnologias Utilizadas
 
-**Administrador Principal:**
-- **Usuário**: `AdminSuperUser`
-- **Senha**: `AdM!n@2024#Sec$Pass`
-- **Email**: `admin.super@oficina.com`
+### Backend
+- Flask (Python)
+- PostgreSQL
+- JWT para autenticação
+- SQLAlchemy ORM
+- Flask-CORS
 
-**Usuário de Teste:**
-- **Usuário**: `user`
-- **Senha**: `user123`
-- **Email**: `user@oficina.com`
+### Frontend
+- React 18
+- Vite
+- Material-UI
+- Axios para requisições HTTP
+- Context API para gerenciamento de estado
 
-## 🚀 Funcionalidades
+### Infraestrutura
+- Docker & Docker Compose
+- Nginx como proxy reverso
+- Coolify para deploy
 
-- **Gestão de Clientes**: Cadastro completo com histórico de serviços
-- **Gestão de Veículos**: Controle detalhado com fotos e documentação
-- **Ordens de Serviço**: Criação e acompanhamento de serviços
-- **Estoque**: Controle de peças e materiais
-- **Financeiro**: Controle de receitas e despesas
-- **Relatórios**: Análises e relatórios gerenciais
-- **Sistema de Backup**: Backup automático completo
+## Instalação e Execução
 
-## 🛠️ Tecnologias
+### Pré-requisitos
+- Docker
+- Docker Compose
 
-- **Backend**: FastAPI, SQLAlchemy, PostgreSQL
-- **Frontend**: React, Vite, TailwindCSS
-- **Infraestrutura**: Docker, Nginx, Redis
-- **Banco de Dados**: PostgreSQL
+### Executando o projeto
 
-## 📦 Instalação e Execução
-
-### Desenvolvimento
+1. Clone o repositório:
 ```bash
-# Clone o repositório
 git clone https://github.com/onlitec/toledooficina.git
 cd toledooficina
+```
 
-# Execute com Docker Compose
+2. Execute com Docker Compose:
+```bash
 docker-compose up -d
 ```
 
-### Produção
-```bash
-# Execute o script de deploy
-./deploy_production.sh
+3. Acesse a aplicação:
+- Frontend: http://localhost:7080
+- Backend API: http://localhost:5000
+
+### Usuário padrão
+- **Usuário**: AdminSuperUser
+- **Senha**: admin123
+
+## Estrutura do Projeto
+
+```
+toledooficina/
+├── backend/
+│   ├── src/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── utils/
+│   │   └── app.py
+│   ├── uploads/
+│   └── Dockerfile
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   ├── utils/
+│   │   └── App.jsx
+│   ├── public/
+│   └── Dockerfile.coolify
+├── nginx/
+│   └── nginx.coolify.conf
+└── docker-compose.yml
 ```
 
-## 🔧 Configuração
+## Correções Recentes
 
-O sistema utiliza variáveis de ambiente para configuração. Copie o arquivo `.env.example` para `.env` e configure as variáveis necessárias.
+### Problemas de Autenticação Resolvidos
+- ✅ Corrigido erro 401/500 nos endpoints de autenticação
+- ✅ Ajustado envio do refresh_token no corpo da requisição JSON
+- ✅ Corrigido parsing da resposta do endpoint `/api/auth/refresh`
 
-## 📋 Scripts Disponíveis
+### Problemas de CORS Resolvidos
+- ✅ Eliminado conflito entre servidor Vite (porta 7082) e Docker (porta 7080)
+- ✅ Configurado proxy correto no nginx para requisições da API
+- ✅ Frontend agora é servido exclusivamente através do Docker/nginx
 
-- `backup_completo.sh`: Backup completo do sistema
-- `deploy_production.sh`: Deploy para produção
-- `validate_deployment.sh`: Validação do deployment
+### Exibição de Imagens Corrigida
+- ✅ Configurado proxy para `/static` no vite.config.js
+- ✅ Mapeamento de volume para diretório `uploads` no docker-compose.yml
+- ✅ Fotos dos veículos sendo exibidas corretamente
 
-## 🔒 Segurança
+## Contribuição
 
-- Autenticação JWT
-- CORS configurado
-- Validação de dados
-- Backup automático
+Para contribuir com o projeto:
 
-## 📄 Licença
+1. Faça um fork do repositório
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
+3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
+4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+5. Abra um Pull Request
 
-Este projeto está sob a licença MIT.
+## Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
