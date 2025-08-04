@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+<<<<<<< HEAD
 from datetime import datetime, date
 from src.models import db
 from src.models.ferramenta import Ferramenta
@@ -99,10 +100,86 @@ def create_ferramenta():
             fornecedor=data.get('fornecedor'),
             intervalo_manutencao_dias=intervalo_manutencao,
             observacoes=data.get('observacoes')
+=======
+from src.models import db
+from src.models.ferramenta import Ferramenta, EmprestimoFerramenta, ManutencaoFerramenta
+from datetime import datetime
+
+ferramenta_bp = Blueprint(\'ferramenta\', __name__)
+
+@ferramenta_bp.route(\'/ferramentas\', methods=[\'GET\'])
+def listar_ferramentas():
+    try:
+        page = request.args.get(\'page\', 1, type=int)
+        per_page = request.args.get(\'per_page\', 10, type=int)
+        search = request.args.get(\'search\', \'\')
+        status = request.args.get(\'status\')
+        
+        query = Ferramenta.query.filter_by(ativo=True)
+        
+        if search:
+            query = query.filter(
+                Ferramenta.codigo.contains(search) |
+                Ferramenta.nome.contains(search) |
+                Ferramenta.numero_serie.contains(search)
+            )
+        
+        if status:
+            query = query.filter_by(status=status)
+        
+        ferramentas = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        return jsonify({
+            \'success\': True,
+            \'data\': [f.to_dict() for f in ferramentas.items],
+            \'pagination\': {
+                \'page\': page,
+                \'per_page\': per_page,
+                \'total\': ferramentas.total,
+                \'pages\': ferramentas.pages
+            }
+        })
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ferramenta_bp.route(\'/ferramentas\', methods=[\'POST\'])
+def criar_ferramenta():
+    try:
+        data = request.get_json()
+        
+        if not data.get(\'codigo\'):
+            return jsonify({\'success\': False, \'message\': \'Código é obrigatório\'}), 400
+        if not data.get(\'nome\'):
+            return jsonify({\'success\': False, \'message\': \'Nome é obrigatório\'}), 400
+        if Ferramenta.query.filter_by(codigo=data[\'codigo\']).first():
+            return jsonify({\'success\': False, \'message\': \'Código já cadastrado\'}), 400
+        
+        ferramenta = Ferramenta(
+            codigo=data[\'codigo\'],
+            nome=data[\'nome\'],
+            descricao=data.get(\'descricao\'),
+            tipo=data.get(\'tipo\'),
+            marca=data.get(\'marca\'),
+            modelo=data.get(\'modelo\'),
+            numero_serie=data.get(\'numero_serie\'),
+            localizacao=data.get(\'localizacao\'),
+            status=data.get(\'status\', \'disponivel\'),
+            valor_aquisicao=data.get(\'valor_aquisicao\'),
+            data_aquisicao=datetime.strptime(data[\'data_aquisicao\'], \'%Y-%m-%d\').date() if data.get(\'data_aquisicao\') else None,
+            fornecedor=data.get(\'fornecedor\'),
+            data_ultima_manutencao=datetime.strptime(data[\'data_ultima_manutencao\'], \'%Y-%m-%d\').date() if data.get(\'data_ultima_manutencao\') else None,
+            frequencia_manutencao_dias=data.get(\'frequencia_manutencao_dias\'),
+            observacoes=data.get(\'observacoes\')
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
         )
         
         db.session.add(ferramenta)
         db.session.commit()
+<<<<<<< HEAD
 
         return jsonify({
             'success': True,
@@ -178,11 +255,26 @@ def delete_ferramenta(ferramenta_id):
         return jsonify({'error': str(e)}), 500
 
 @ferramenta_bp.route('/ferramentas/<int:ferramenta_id>/emprestimo', methods=['POST'])
+=======
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Ferramenta criada com sucesso\',
+            \'data\': ferramenta.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ferramenta_bp.route(\'/ferramentas/<int:ferramenta_id>/emprestimo\', methods=[\'POST\'])
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
 def emprestar_ferramenta(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
         data = request.get_json()
         
+<<<<<<< HEAD
         if ferramenta.status != 'disponivel':
             return jsonify({'error': 'Ferramenta não está disponível'}), 400
         
@@ -195,10 +287,30 @@ def emprestar_ferramenta(ferramenta_id):
         
         ferramenta.status = 'emprestada'
         ferramenta.responsavel_atual = data['responsavel']
+=======
+        if not data.get(\'responsavel\'):
+            return jsonify({\'success\': False, \'message\': \'Responsável é obrigatório\'}), 400
+        
+        if ferramenta.status != \'disponivel\':
+            return jsonify({\'success\': False, \'message\': \'Ferramenta não disponível para empréstimo\'}), 400
+        
+        emprestimo = EmprestimoFerramenta(
+            ferramenta_id=ferramenta_id,
+            responsavel=data[\'responsavel\'],
+            data_emprestimo=datetime.strptime(data[\'data_emprestimo\'], \'%Y-%m-%d %H:%M:%S\') if data.get(\'data_emprestimo\') else datetime.utcnow(),
+            data_devolucao_prevista=datetime.strptime(data[\'data_devolucao_prevista\'], \'%Y-%m-%d %H:%M:%S\') if data.get(\'data_devolucao_prevista\') else None,
+            observacoes=data.get(\'observacoes\')
+        )
+        
+        ferramenta.status = \'emprestada\'
+        ferramenta.responsavel_atual = data[\'responsavel\']
+        ferramenta.data_atualizacao = datetime.utcnow()
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
         
         db.session.add(emprestimo)
         db.session.commit()
         
+<<<<<<< HEAD
         return jsonify(emprestimo.to_dict()), 201
     
     except Exception as e:
@@ -237,11 +349,60 @@ def devolver_ferramenta(ferramenta_id):
         return jsonify({'error': str(e)}), 500
 
 @ferramenta_bp.route('/ferramentas/<int:ferramenta_id>/manutencao', methods=['POST'])
+=======
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Ferramenta emprestada com sucesso\',
+            \'data\': emprestimo.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ferramenta_bp.route(\'/ferramentas/<int:ferramenta_id>/devolucao\', methods=[\'POST\'])
+def devolver_ferramenta(ferramenta_id):
+    try:
+        ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
+        
+        if ferramenta.status != \'emprestada\':
+            return jsonify({\'success\': False, \'message\': \'Ferramenta não está emprestada\'}), 400
+        
+        emprestimo_ativo = EmprestimoFerramenta.query.filter_by(
+            ferramenta_id=ferramenta_id,
+            status=\'ativo\'
+        ).order_by(EmprestimoFerramenta.data_emprestimo.desc()).first()
+        
+        if not emprestimo_ativo:
+            return jsonify({\'success\': False, \'message\': \'Nenhum empréstimo ativo encontrado para esta ferramenta\'}), 400
+        
+        emprestimo_ativo.data_devolucao_real = datetime.utcnow()
+        emprestimo_ativo.status = \'devolvido\'
+        
+        ferramenta.status = \'disponivel\'
+        ferramenta.responsavel_atual = None
+        ferramenta.data_atualizacao = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Ferramenta devolvida com sucesso\',
+            \'data\': ferramenta.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ferramenta_bp.route(\'/ferramentas/<int:ferramenta_id>/manutencao\', methods=[\'POST\'])
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
 def registrar_manutencao(ferramenta_id):
     try:
         ferramenta = Ferramenta.query.get_or_404(ferramenta_id)
         data = request.get_json()
         
+<<<<<<< HEAD
         manutencao = ManutencaoFerramenta(
             ferramenta_id=ferramenta_id,
             tipo=data['tipo'],
@@ -258,10 +419,36 @@ def registrar_manutencao(ferramenta_id):
         if ferramenta.intervalo_manutencao_dias:
             from datetime import timedelta
             ferramenta.proxima_manutencao = manutencao.data_manutencao + timedelta(days=ferramenta.intervalo_manutencao_dias)
+=======
+        if not data.get(\'tipo\'):
+            return jsonify({\'success\': False, \'message\': \'Tipo de manutenção é obrigatório\'}), 400
+        if not data.get(\'descricao\'):
+            return jsonify({\'success\': False, \'message\': \'Descrição é obrigatória\'}), 400
+        if not data.get(\'data_manutencao\'):
+            return jsonify({\'success\': False, \'message\': \'Data da manutenção é obrigatória\'}), 400
+        
+        manutencao = ManutencaoFerramenta(
+            ferramenta_id=ferramenta_id,
+            tipo=data[\'tipo\'],
+            descricao=data[\'descricao\'],
+            data_manutencao=datetime.strptime(data[\'data_manutencao\'], \'%Y-%m-%d\').date(),
+            custo=data.get(\'custo\'),
+            responsavel=data.get(\'responsavel\'),
+            fornecedor_servico=data.get(\'fornecedor_servico\'),
+            observacoes=data.get(\'observacoes\')
+        )
+        
+        ferramenta.data_ultima_manutencao = manutencao.data_manutencao
+        if ferramenta.frequencia_manutencao_dias:
+            ferramenta.proxima_manutencao = ferramenta.data_ultima_manutencao + timedelta(days=ferramenta.frequencia_manutencao_dias)
+        ferramenta.status = \'manutencao\'
+        ferramenta.data_atualizacao = datetime.utcnow()
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
         
         db.session.add(manutencao)
         db.session.commit()
         
+<<<<<<< HEAD
         return jsonify(manutencao.to_dict()), 201
     
     except Exception as e:
@@ -292,3 +479,34 @@ def get_estatisticas():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+=======
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Manutenção registrada com sucesso\',
+            \'data\': manutencao.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ferramenta_bp.route(\'/ferramentas/alertas\', methods=[\'GET\'])
+def alertas_ferramentas():
+    try:
+        ferramentas_manutencao = Ferramenta.query.filter(
+            Ferramenta.proxima_manutencao <= datetime.now().date() + timedelta(days=7),
+            Ferramenta.ativo == True,
+            Ferramenta.status != \'manutencao\'
+        ).all()
+        
+        return jsonify({
+            \'success\': True,
+            \'data\': [f.to_dict() for f in ferramentas_manutencao]
+        })
+        
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+
+
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)

@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from src.models import db
+<<<<<<< HEAD
 from src.models.financeiro import ContaReceber, ContaPagar, PagamentoRecebimento, FluxoCaixa
 from datetime import datetime
 
@@ -116,11 +117,128 @@ def criar_conta():
             
             if data.get('data_pagamento'):
                 conta.data_pagamento = datetime.fromisoformat(data.get('data_pagamento'))
+=======
+from src.models.financeiro import ContaReceber, ContaPagar, PagamentoRecebimento, FluxoCaixa, CategoriaFinanceira
+from datetime import datetime, date
+
+financeiro_bp = Blueprint(\'financeiro\', __name__)
+
+# Rotas para Categorias Financeiras
+@financeiro_bp.route(\'/categorias-financeiras\', methods=[\'GET\'])
+def listar_categorias_financeiras():
+    try:
+        tipo = request.args.get(\'tipo\')  # receita ou despesa
+        query = CategoriaFinanceira.query.filter_by(ativo=True)
+        
+        if tipo:
+            query = query.filter_by(tipo=tipo)
+        
+        categorias = query.all()
+        return jsonify({
+            \'success\': True,
+            \'data\': [categoria.to_dict() for categoria in categorias]
+        })
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@financeiro_bp.route(\'/categorias-financeiras\', methods=[\'POST\'])
+def criar_categoria_financeira():
+    try:
+        data = request.get_json()
+        
+        if not data.get(\'nome\'):
+            return jsonify({\'success\': False, \'message\': \'Nome é obrigatório\'}), 400
+        if not data.get(\'tipo\') or data[\'tipo\'] not in [\'receita\', \'despesa\']:
+            return jsonify({\'success\': False, \'message\': \'Tipo deve ser receita ou despesa\'}), 400
+        
+        categoria = CategoriaFinanceira(
+            nome=data[\'nome\'],
+            tipo=data[\'tipo\'],
+            descricao=data.get(\'descricao\')
+        )
+        
+        db.session.add(categoria)
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Categoria criada com sucesso\',
+            \'data\': categoria.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+# Rotas para Contas a Receber
+@financeiro_bp.route(\'/contas-receber\', methods=[\'GET\'])
+def listar_contas_receber():
+    try:
+        page = request.args.get(\'page\', 1, type=int)
+        per_page = request.args.get(\'per_page\', 10, type=int)
+        status = request.args.get(\'status\')
+        vencidas = request.args.get(\'vencidas\', type=bool)
+        
+        query = ContaReceber.query
+        
+        if status:
+            query = query.filter_by(status=status)
+        
+        if vencidas:
+            query = query.filter(ContaReceber.data_vencimento < date.today())
+        
+        contas = query.order_by(ContaReceber.data_vencimento.asc()).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        return jsonify({
+            \'success\': True,
+            \'data\': [conta.to_dict() for conta in contas.items],
+            \'pagination\': {
+                \'page\': page,
+                \'per_page\': per_page,
+                \'total\': contas.total,
+                \'pages\': contas.pages
+            }
+        })
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@financeiro_bp.route(\'/contas-receber\', methods=[\'POST\'])
+def criar_conta_receber():
+    try:
+        data = request.get_json()
+        
+        if not data.get(\'cliente_id\'):
+            return jsonify({\'success\': False, \'message\': \'Cliente é obrigatório\'}), 400
+        if not data.get(\'categoria_financeira_id\'):
+            return jsonify({\'success\': False, \'message\': \'Categoria financeira é obrigatória\'}), 400
+        if not data.get(\'descricao\'):
+            return jsonify({\'success\': False, \'message\': \'Descrição é obrigatória\'}), 400
+        if not data.get(\'valor_original\'):
+            return jsonify({\'success\': False, \'message\': \'Valor é obrigatório\'}), 400
+        if not data.get(\'data_vencimento\'):
+            return jsonify({\'success\': False, \'message\': \'Data de vencimento é obrigatória\'}), 400
+        
+        conta = ContaReceber(
+            cliente_id=data[\'cliente_id\'],
+            categoria_financeira_id=data[\'categoria_financeira_id\'],
+            ordem_servico_id=data.get(\'ordem_servico_id\'),
+            descricao=data[\'descricao\'],
+            valor_original=data[\'valor_original\'],
+            data_emissao=datetime.strptime(data.get(\'data_emissao\', datetime.now().strftime(\'%Y-%m-%d\')), \'%Y-%m-%d\').date(),
+            data_vencimento=datetime.strptime(data[\'data_vencimento\'], \'%Y-%m-%d\').date(),
+            observacoes=data.get(\'observacoes\')
+        )
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
         
         db.session.add(conta)
         db.session.commit()
         
         return jsonify({
+<<<<<<< HEAD
             'success': True,
             'message': 'Conta criada com sucesso!',
             'data': {
@@ -172,10 +290,76 @@ def atualizar_conta(conta_id):
         return jsonify({
             'success': True,
             'message': 'Conta atualizada com sucesso!'
+=======
+            \'success\': True,
+            \'message\': \'Conta a receber criada com sucesso\',
+            \'data\': conta.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@financeiro_bp.route(\'/contas-receber/<int:conta_id>/pagamento\', methods=[\'POST\'])
+def receber_pagamento(conta_id):
+    try:
+        conta = ContaReceber.query.get_or_404(conta_id)
+        data = request.get_json()
+        
+        if not data.get(\'valor\'):
+            return jsonify({\'success\': False, \'message\': \'Valor é obrigatório\'}), 400
+        if not data.get(\'forma_pagamento\'):
+            return jsonify({\'success\': False, \'message\': \'Forma de pagamento é obrigatória\'}), 400
+        
+        valor_pagamento = float(data[\'valor\'])
+        
+        if valor_pagamento > conta.valor_saldo:
+            return jsonify({\'success\': False, \'message\': \'Valor do pagamento superior ao saldo da conta\'}), 400
+        
+        pagamento = PagamentoRecebimento(
+            conta_receber_id=conta_id,
+            valor=valor_pagamento,
+            data_pagamento=datetime.strptime(data.get(\'data_pagamento\', datetime.now().strftime(\'%Y-%m-%d\')), \'%Y-%m-%d\').date(),
+            forma_pagamento=data[\'forma_pagamento\'],
+            numero_documento=data.get(\'numero_documento\'),
+            observacoes=data.get(\'observacoes\')
+        )
+        
+        conta.valor_pago += valor_pagamento
+        
+        if conta.valor_saldo <= 0:
+            conta.status = \'paga\'
+            conta.data_pagamento = pagamento.data_pagamento
+        
+        # Registrar no fluxo de caixa
+        fluxo = FluxoCaixa(
+            data=pagamento.data_pagamento,
+            tipo=\'entrada\',
+            categoria_financeira_id=conta.categoria_financeira_id,
+            descricao=f\'Recebimento - {conta.descricao}\',
+            valor=valor_pagamento,
+            forma_pagamento=data[\'forma_pagamento\'],
+            conta_receber_id=conta_id,
+            ordem_servico_id=conta.ordem_servico_id
+        )
+        
+        db.session.add(pagamento)
+        db.session.add(fluxo)
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Pagamento registrado com sucesso\',
+            \'data\': {
+                \'pagamento\': pagamento.to_dict(),
+                \'conta\': conta.to_dict()
+            }
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
         })
         
     except Exception as e:
         db.session.rollback()
+<<<<<<< HEAD
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @financeiro_bp.route('/financeiro/resumo', methods=['GET'])
@@ -322,3 +506,148 @@ def recriar_tabelas_financeiro():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+=======
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+# Rotas para Contas a Pagar
+@financeiro_bp.route(\'/contas-pagar\', methods=[\'GET\'])
+def listar_contas_pagar():
+    try:
+        page = request.args.get(\'page\', 1, type=int)
+        per_page = request.args.get(\'per_page\', 10, type=int)
+        status = request.args.get(\'status\')
+        vencidas = request.args.get(\'vencidas\', type=bool)
+        
+        query = ContaPagar.query
+        
+        if status:
+            query = query.filter_by(status=status)
+        
+        if vencidas:
+            query = query.filter(ContaPagar.data_vencimento < date.today())
+        
+        contas = query.order_by(ContaPagar.data_vencimento.asc()).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        return jsonify({
+            \'success\': True,
+            \'data\': [conta.to_dict() for conta in contas.items],
+            \'pagination\': {
+                \'page\': page,
+                \'per_page\': per_page,
+                \'total\': contas.total,
+                \'pages\': contas.pages
+            }
+        })
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@financeiro_bp.route(\'/contas-pagar\', methods=[\'POST\'])
+def criar_conta_pagar():
+    try:
+        data = request.get_json()
+        
+        if not data.get(\'categoria_financeira_id\'):
+            return jsonify({\'success\': False, \'message\': \'Categoria financeira é obrigatória\'}), 400
+        if not data.get(\'descricao\'):
+            return jsonify({\'success\': False, \'message\': \'Descrição é obrigatória\'}), 400
+        if not data.get(\'valor_original\'):
+            return jsonify({\'success\': False, \'message\': \'Valor é obrigatório\'}), 400
+        if not data.get(\'data_vencimento\'):
+            return jsonify({\'success\': False, \'message\': \'Data de vencimento é obrigatória\'}), 400
+        
+        conta = ContaPagar(
+            fornecedor_id=data.get(\'fornecedor_id\'),
+            categoria_financeira_id=data[\'categoria_financeira_id\'],
+            descricao=data[\'descricao\'],
+            valor_original=data[\'valor_original\'],
+            data_emissao=datetime.strptime(data.get(\'data_emissao\', datetime.now().strftime(\'%Y-%m-%d\')), \'%Y-%m-%d\').date(),
+            data_vencimento=datetime.strptime(data[\'data_vencimento\'], \'%Y-%m-%d\').date(),
+            observacoes=data.get(\'observacoes\')
+        )
+        
+        db.session.add(conta)
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Conta a pagar criada com sucesso\',
+            \'data\': conta.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@financeiro_bp.route(\'/fluxo-caixa\', methods=[\'GET\'])
+def listar_fluxo_caixa():
+    try:
+        data_inicio = request.args.get(\'data_inicio\')
+        data_fim = request.args.get(\'data_fim\')
+        tipo = request.args.get(\'tipo\')
+        
+        query = FluxoCaixa.query
+        
+        if data_inicio:
+            query = query.filter(FluxoCaixa.data >= datetime.strptime(data_inicio, \'%Y-%m-%d\').date())
+        
+        if data_fim:
+            query = query.filter(FluxoCaixa.data <= datetime.strptime(data_fim, \'%Y-%m-%d\').date())
+        
+        if tipo:
+            query = query.filter_by(tipo=tipo)
+        
+        movimentacoes = query.order_by(FluxoCaixa.data.desc()).all()
+        
+        return jsonify({
+            \'success\': True,
+            \'data\': [mov.to_dict() for mov in movimentacoes]
+        })
+        
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@financeiro_bp.route(\'/dashboard-financeiro\', methods=[\'GET\'])
+def dashboard_financeiro():
+    try:
+        hoje = date.today()
+        
+        # Contas a receber em aberto
+        contas_receber_abertas = db.session.query(db.func.sum(ContaReceber.valor_original - ContaReceber.valor_pago)).filter(
+            ContaReceber.status == \'aberta\'
+        ).scalar() or 0
+        
+        # Contas a pagar em aberto
+        contas_pagar_abertas = db.session.query(db.func.sum(ContaPagar.valor_original - ContaPagar.valor_pago)).filter(
+            ContaPagar.status == \'aberta\'
+        ).scalar() or 0
+        
+        # Contas vencidas
+        contas_receber_vencidas = ContaReceber.query.filter(
+            ContaReceber.data_vencimento < hoje,
+            ContaReceber.status == \'aberta\'
+        ).count()
+        
+        contas_pagar_vencidas = ContaPagar.query.filter(
+            ContaPagar.data_vencimento < hoje,
+            ContaPagar.status == \'aberta\'
+        ).count()
+        
+        return jsonify({
+            \'success\': True,
+            \'data\': {
+                \'contas_receber_abertas\': float(contas_receber_abertas),
+                \'contas_pagar_abertas\': float(contas_pagar_abertas),
+                \'contas_receber_vencidas\': contas_receber_vencidas,
+                \'contas_pagar_vencidas\': contas_pagar_vencidas,
+                \'saldo_liquido\': float(contas_receber_abertas - contas_pagar_abertas)
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)

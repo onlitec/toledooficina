@@ -11,33 +11,26 @@ class OrdemServico(db.Model):
     
     # Dados da ordem
     data_abertura = db.Column(db.DateTime, default=datetime.utcnow)
-    data_previsao = db.Column(db.DateTime)
-    data_conclusao = db.Column(db.DateTime)
-    status = db.Column(db.String(20), default='aberta')  # aberta, em_andamento, aguardando_peca, concluida, cancelada
-    prioridade = db.Column(db.String(20), default='normal')  # baixa, normal, alta, urgente
+    data_conclusao_prevista = db.Column(db.DateTime)
+    data_conclusao_real = db.Column(db.DateTime)
+    status = db.Column(db.String(20), default=\'aberta\')  # aberta, em_andamento, aguardando_peca, concluida, cancelada
     
     # Descrição do problema/serviço
-    problema_relatado = db.Column(db.Text)
+    descricao_problema_servico_solicitado = db.Column(db.Text, nullable=False)
     diagnostico = db.Column(db.Text)
     servicos_executados = db.Column(db.Text)
-    observacoes = db.Column(db.Text)
-    
-    # Quilometragem
-    km_entrada = db.Column(db.Integer)
-    km_saida = db.Column(db.Integer)
-    
-    # Responsáveis
-    mecanico_responsavel = db.Column(db.String(100))
-    consultor_responsavel = db.Column(db.String(100))
+    observacoes_internas = db.Column(db.Text)
     
     # Valores
-    valor_mao_obra = db.Column(db.Numeric(10, 2), default=0)
-    valor_pecas = db.Column(db.Numeric(10, 2), default=0)
-    valor_desconto = db.Column(db.Numeric(10, 2), default=0)
-    valor_total = db.Column(db.Numeric(10, 2), default=0)
+    valor_total_pecas = db.Column(db.Numeric(10, 2), default=0)
+    valor_total_servicos = db.Column(db.Numeric(10, 2), default=0)
+    valor_total_mao_obra = db.Column(db.Numeric(10, 2), default=0)
+    valor_total_os = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    desconto = db.Column(db.Numeric(10, 2), default=0)
+    valor_final = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     
     # Aprovação do cliente
-    aprovada_cliente = db.Column(db.Boolean, default=False)
+    aprovado_cliente = db.Column(db.Boolean, default=False)
     data_aprovacao = db.Column(db.DateTime)
     
     # Timestamps

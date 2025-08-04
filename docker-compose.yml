@@ -1,6 +1,51 @@
 version: '3.8'
 
 services:
+<<<<<<< HEAD
+=======
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: erp-oficina-backend
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=sqlite:///src/database/app.db
+      - PYTHONPATH=/app
+    volumes:
+      - backend_data:/app/src/database
+      - uploads_data:/app/uploads
+      - backups_data:/app/backups
+    networks:
+      - erp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/users"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: erp-oficina-frontend
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - erp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL database (opcional, para produção)
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
   postgres:
     image: postgres:15
     container_name: postgres-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}

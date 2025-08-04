@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+<<<<<<< HEAD
 import {
   BarChart3,
   FileText,
@@ -284,6 +285,51 @@ export function Relatorios() {
     )
   }
 
+=======
+import { BarChart3, FileText, Download, Printer } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { toast } from '@/components/ui/use-toast'
+
+export function Relatorios() {
+  const [relatoriosDisponiveis, setRelatoriosDisponiveis] = useState([])
+
+  useEffect(() => {
+    // Simula a busca de relatórios disponíveis do backend
+    setRelatoriosDisponiveis([
+      { id: 'vendas_mensal', nome: 'Vendas Mensal', descricao: 'Relatório de vendas por mês', endpoint: '/api/relatorios/vendas-mensal' },
+      { id: 'estoque_atual', nome: 'Estoque Atual', descricao: 'Relatório de estoque atual de peças', endpoint: '/api/relatorios/estoque-atual' },
+      { id: 'contas_receber', nome: 'Contas a Receber', descricao: 'Relatório de contas a receber em aberto', endpoint: '/api/relatorios/contas-receber' },
+      { id: 'contas_pagar', nome: 'Contas a Pagar', descricao: 'Relatório de contas a pagar em aberto', endpoint: '/api/relatorios/contas-pagar' },
+      { id: 'ordens_servico_abertas', nome: 'Ordens de Serviço Abertas', descricao: 'Relatório de OS em andamento', endpoint: '/api/relatorios/ordens-servico-abertas' },
+    ])
+  }, [])
+
+  const handleGenerateReport = async (endpoint, reportName) => {
+    try {
+      toast({ title: 'Gerando Relatório', description: `Gerando ${reportName}...` })
+      const response = await fetch(endpoint, { method: 'GET' })
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${reportName.toLowerCase().replace(/ /g, '_')}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        window.URL.revokeObjectURL(url)
+        toast({ title: 'Sucesso', description: `${reportName} gerado e baixado!` })
+      } else {
+        const errorData = await response.json()
+        toast({ title: 'Erro', description: `Falha ao gerar ${reportName}: ${errorData.message}`, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: `Falha ao gerar ${reportName}.`, variant: 'destructive' })
+    }
+  }
+
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -300,6 +346,7 @@ export function Relatorios() {
         </button>
       </div>
 
+<<<<<<< HEAD
       {/* Tipos de Relatórios Disponíveis */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tiposRelatorio.map((tipo) => {
@@ -431,7 +478,39 @@ export function Relatorios() {
           )}
         </div>
       </div>
+=======
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <BarChart3 className="h-5 w-5 mr-2" />
+            Relatórios Disponíveis
+          </CardTitle>
+          <CardDescription>
+            Selecione um relatório para gerar e baixar.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {relatoriosDisponiveis.map(relatorio => (
+              <Card key={relatorio.id} className="flex flex-col justify-between">
+                <CardHeader>
+                  <CardTitle className="text-lg">{relatorio.nome}</CardTitle>
+                  <CardDescription>{relatorio.descricao}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex justify-end">
+                  <Button onClick={() => handleGenerateReport(relatorio.endpoint, relatorio.nome)}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Gerar PDF
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
     </div>
   )
 }
+
 

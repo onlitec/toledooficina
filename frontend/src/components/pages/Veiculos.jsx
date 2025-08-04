@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+<<<<<<< HEAD
 import { useNavigate } from 'react-router-dom'
 import { 
   Plus, 
@@ -110,6 +111,171 @@ export function Veiculos() {
         onSave={handleSaveVeiculo} 
       />
     )
+=======
+import { Plus, Search, Car, Edit, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from '@/components/ui/use-toast'
+
+export function Veiculos() {
+  const [veiculos, setVeiculos] = useState([])
+  const [clientes, setClientes] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [currentVeiculo, setCurrentVeiculo] = useState(null)
+  const [formData, setFormData] = useState({
+    cliente_id: '',
+    marca: '',
+    modelo: '',
+    ano_fabricacao: '',
+    ano_modelo: '',
+    cor: '',
+    placa: '',
+    chassi: '',
+    renavam: '',
+    combustivel: '',
+    motor: '',
+    cambio: '',
+    quilometragem_atual: '',
+    vencimento_ipva: '',
+    vencimento_seguro: '',
+    vencimento_licenciamento: '',
+    observacoes: ''
+  })
+
+  useEffect(() => {
+    fetchVeiculos()
+    fetchClientes()
+  }, [])
+
+  const fetchVeiculos = async () => {
+    try {
+      const response = await fetch(`/api/veiculos?search=${searchTerm}`)
+      const data = await response.json()
+      if (data.success) {
+        setVeiculos(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar veículos.', variant: 'destructive' })
+    }
+  }
+
+  const fetchClientes = async () => {
+    try {
+      const response = await fetch('/api/clientes')
+      const data = await response.json()
+      if (data.success) {
+        setClientes(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar clientes.', variant: 'destructive' })
+    }
+  }
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSelectChange = (id, value) => {
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSaveVeiculo = async () => {
+    const method = currentVeiculo ? 'PUT' : 'POST'
+    const url = currentVeiculo ? `/api/veiculos/${currentVeiculo.id}` : '/api/veiculos'
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsModalOpen(false)
+        fetchVeiculos()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar veículo.', variant: 'destructive' })
+    }
+  }
+
+  const handleEditVeiculo = (veiculo) => {
+    setCurrentVeiculo(veiculo)
+    setFormData({
+      cliente_id: veiculo.cliente_id,
+      marca: veiculo.marca,
+      modelo: veiculo.modelo,
+      ano_fabricacao: veiculo.ano_fabricacao,
+      ano_modelo: veiculo.ano_modelo || '',
+      cor: veiculo.cor || '',
+      placa: veiculo.placa,
+      chassi: veiculo.chassi || '',
+      renavam: veiculo.renavam || '',
+      combustivel: veiculo.combustivel || '',
+      motor: veiculo.motor || '',
+      cambio: veiculo.cambio || '',
+      quilometragem_atual: veiculo.quilometragem_atual || '',
+      vencimento_ipva: veiculo.vencimento_ipva ? new Date(veiculo.vencimento_ipva).toISOString().split('T')[0] : '',
+      vencimento_seguro: veiculo.vencimento_seguro ? new Date(veiculo.vencimento_seguro).toISOString().split('T')[0] : '',
+      vencimento_licenciamento: veiculo.vencimento_licenciamento ? new Date(veiculo.vencimento_licenciamento).toISOString().split('T')[0] : '',
+      observacoes: veiculo.observacoes || ''
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleDeleteVeiculo = async (id) => {
+    if (!window.confirm('Tem certeza que deseja desativar este veículo?')) return
+    try {
+      const response = await fetch(`/api/veiculos/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        fetchVeiculos()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao desativar veículo.', variant: 'destructive' })
+    }
+  }
+
+  const handleNewVeiculoClick = () => {
+    setCurrentVeiculo(null)
+    setFormData({
+      cliente_id: '',
+      marca: '',
+      modelo: '',
+      ano_fabricacao: '',
+      ano_modelo: '',
+      cor: '',
+      placa: '',
+      chassi: '',
+      renavam: '',
+      combustivel: '',
+      motor: '',
+      cambio: '',
+      quilometragem_atual: '',
+      vencimento_ipva: '',
+      vencimento_seguro: '',
+      vencimento_licenciamento: '',
+      observacoes: ''
+    })
+    setIsModalOpen(true)
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
   }
 
   return (
@@ -121,10 +287,14 @@ export function Veiculos() {
           <p className="text-gray-600">Gerencie os veículos dos clientes</p>
         </div>
         
+<<<<<<< HEAD
         <button
           onClick={handleNovoVeiculo}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
         >
+=======
+        <Button onClick={handleNewVeiculoClick}>
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
           <Plus className="h-4 w-4 mr-2" />
           Novo Veículo
         </button>
@@ -139,11 +309,18 @@ export function Veiculos() {
             placeholder="Buscar por placa, marca ou modelo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+<<<<<<< HEAD
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+=======
+            onKeyDown={(e) => { if (e.key === 'Enter') fetchVeiculos() }}
+            className="pl-10"
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
           />
         </div>
+        <Button onClick={fetchVeiculos}>Buscar</Button>
       </div>
 
+<<<<<<< HEAD
       {/* Lista de Veículos */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
@@ -293,3 +470,156 @@ export function Veiculos() {
     </div>
   )
 }
+=======
+      {/* Content */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Car className="h-5 w-5 mr-2" />
+            Lista de Veículos
+          </CardTitle>
+          <CardDescription>
+            Visualize e gerencie os veículos cadastrados.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Placa</TableHead>
+                <TableHead>Marca</TableHead>
+                <TableHead>Modelo</TableHead>
+                <TableHead>Ano</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {veiculos.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan="6" className="text-center">Nenhum veículo encontrado.</TableCell>
+                </TableRow>
+              ) : (
+                veiculos.map(veiculo => (
+                  <TableRow key={veiculo.id}>
+                    <TableCell className="font-medium">{veiculo.placa}</TableCell>
+                    <TableCell>{veiculo.marca}</TableCell>
+                    <TableCell>{veiculo.modelo}</TableCell>
+                    <TableCell>{veiculo.ano_fabricacao}</TableCell>
+                    <TableCell>{clientes.find(c => c.id === veiculo.cliente_id)?.nome || 'N/A'}</TableCell>
+                    <TableCell className="flex space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditVeiculo(veiculo)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteVeiculo(veiculo.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Modal de Cadastro/Edição */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>{currentVeiculo ? 'Editar Veículo' : 'Novo Veículo'}</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do veículo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="cliente_id">Cliente</Label>
+              <Select id="cliente_id" value={formData.cliente_id} onValueChange={(value) => handleSelectChange('cliente_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clientes.map(cliente => (
+                    <SelectItem key={cliente.id} value={cliente.id}>{cliente.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="placa">Placa</Label>
+              <Input id="placa" value={formData.placa} onChange={handleInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="marca">Marca</Label>
+              <Input id="marca" value={formData.marca} onChange={handleInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="modelo">Modelo</Label>
+              <Input id="modelo" value={formData.modelo} onChange={handleInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ano_fabricacao">Ano Fabricação</Label>
+              <Input id="ano_fabricacao" type="number" value={formData.ano_fabricacao} onChange={handleInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ano_modelo">Ano Modelo</Label>
+              <Input id="ano_modelo" type="number" value={formData.ano_modelo} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cor">Cor</Label>
+              <Input id="cor" value={formData.cor} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="chassi">Chassi</Label>
+              <Input id="chassi" value={formData.chassi} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="renavam">Renavam</Label>
+              <Input id="renavam" value={formData.renavam} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="combustivel">Combustível</Label>
+              <Input id="combustivel" value={formData.combustivel} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="motor">Motor</Label>
+              <Input id="motor" value={formData.motor} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cambio">Câmbio</Label>
+              <Input id="cambio" value={formData.cambio} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quilometragem_atual">Quilometragem Atual</Label>
+              <Input id="quilometragem_atual" type="number" value={formData.quilometragem_atual} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vencimento_ipva">Vencimento IPVA</Label>
+              <Input id="vencimento_ipva" type="date" value={formData.vencimento_ipva} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vencimento_seguro">Vencimento Seguro</Label>
+              <Input id="vencimento_seguro" type="date" value={formData.vencimento_seguro} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vencimento_licenciamento">Vencimento Licenciamento</Label>
+              <Input id="vencimento_licenciamento" type="date" value={formData.vencimento_licenciamento} onChange={handleInputChange} />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input id="observacoes" value={formData.observacoes} onChange={handleInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveVeiculo}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)

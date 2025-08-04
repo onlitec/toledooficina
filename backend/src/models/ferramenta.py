@@ -8,24 +8,18 @@ class Ferramenta(db.Model):
     codigo = db.Column(db.String(50), unique=True, nullable=True)  # Permitir null temporariamente para gerar código
     nome = db.Column(db.String(100), nullable=False)
     descricao = db.Column(db.Text)
+    tipo = db.Column(db.String(50)) # Manual, Elétrica, Pneumática, Medição, etc.
     marca = db.Column(db.String(50))
     modelo = db.Column(db.String(50))
-    numero_serie = db.Column(db.String(50))
+    numero_serie = db.Column(db.String(50), unique=True)
     
     # Localização e status
-    localizacao = db.Column(db.String(100))  # bancada, armário, etc.
-    status = db.Column(db.String(20), default='disponivel')  # disponivel, emprestada, manutencao, perdida
-    responsavel_atual = db.Column(db.String(100))
-    
-    # Dados financeiros
-    valor_aquisicao = db.Column(db.Numeric(10, 2))
-    data_aquisicao = db.Column(db.Date)
-    fornecedor = db.Column(db.String(100))
+    localizacao = db.Column(db.String(100), nullable=False)  # bancada, armário, etc.
+    status = db.Column(db.String(20), default=\'disponivel\')  # disponivel, emprestada, manutencao, perdida
     
     # Manutenção
     data_ultima_manutencao = db.Column(db.Date)
-    proxima_manutencao = db.Column(db.Date)
-    intervalo_manutencao_dias = db.Column(db.Integer)  # dias entre manutenções
+    frequencia_manutencao_dias = db.Column(db.Integer)  # dias entre manutenções
     
     # Dados adicionais
     observacoes = db.Column(db.Text)

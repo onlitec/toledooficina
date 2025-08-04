@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+<<<<<<< HEAD
 from datetime import datetime
 from src.models import db
 from src.models.ordem_servico import OrdemServico, ItemOrdemServico, ServicoOrdem
@@ -119,3 +120,249 @@ def cancelar_ordem_servico(os_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+=======
+from src.models import db
+from src.models.ordem_servico import OrdemServico, ItemOrdemServico, ServicoOrdem, TipoServico
+from src.models.cliente import Cliente
+from src.models.veiculo import Veiculo
+from datetime import datetime
+
+ordem_servico_bp = Blueprint(\'ordem_servico\', __name__)
+
+@ordem_servico_bp.route(\'/ordens-servico\', methods=[\'GET\'])
+def listar_ordens_servico():
+    try:
+        page = request.args.get(\'page\', 1, type=int)
+        per_page = request.args.get(\'per_page\', 10, type=int)
+        search = request.args.get(\'search\', \'\')
+        status = request.args.get(\'status\')
+        cliente_id = request.args.get(\'cliente_id\', type=int)
+        
+        query = OrdemServico.query
+        
+        if search:
+            query = query.filter(OrdemServico.numero.contains(search))
+        
+        if status:
+            query = query.filter_by(status=status)
+        
+        if cliente_id:
+            query = query.filter_by(cliente_id=cliente_id)
+        
+        ordens = query.order_by(OrdemServico.data_abertura.desc()).paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        return jsonify({
+            \'success\': True,
+            \'data\': [ordem.to_dict() for ordem in ordens.items],
+            \'pagination\': {
+                \'page\': page,
+                \'per_page\': per_page,
+                \'total\': ordens.total,
+                \'pages\': ordens.pages
+            }
+        })
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ordem_servico_bp.route(\'/ordens-servico\', methods=[\'POST\'])
+def criar_ordem_servico():
+    try:
+        data = request.get_json()
+        
+        if not data.get(\'cliente_id\'):
+            return jsonify({\'success\': False, \'message\': \'Cliente é obrigatório\'}), 400
+        if not Cliente.query.get(data[\'cliente_id\']):
+            return jsonify({\'success\': False, \'message\': \'Cliente não encontrado\'}), 404
+        if not data.get(\'veiculo_id\'):
+            return jsonify({\'success\': False, \'message\': \'Veículo é obrigatório\'}), 400
+        if not Veiculo.query.get(data[\'veiculo_id\']):
+            return jsonify({\'success\': False, \'message\': \'Veículo não encontrado\'}), 404
+        if not data.get(\'descricao_problema_servico_solicitado\'):
+            return jsonify({\'success\': False, \'message\': \'Descrição do problema/serviço é obrigatória\'}), 400
+        
+        # Gerar número da OS
+        ultimo_numero = db.session.query(db.func.max(OrdemServico.numero)).scalar()
+        if ultimo_numero:
+            proximo_numero = str(int(ultimo_numero) + 1).zfill(6)
+        else:
+            proximo_numero = \'000001\'
+        
+        ordem = OrdemServico(
+            numero=proximo_numero,
+            cliente_id=data[\'cliente_id\'],
+            veiculo_id=data[\'veiculo_id\'],
+            descricao_problema_servico_solicitado=data[\'descricao_problema_servico_solicitado\'],
+            data_conclusao_prevista=datetime.strptime(data[\'data_conclusao_prevista\'], \'%Y-%m-%d %H:%M:%S\') if data.get(\'data_conclusao_prevista\') else None,
+            diagnostico=data.get(\'diagnostico\'),
+            observacoes_internas=data.get(\'observacoes_internas\')
+        )
+        
+        db.session.add(ordem)
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Ordem de serviço criada com sucesso\',
+            \'data\': ordem.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ordem_servico_bp.route(\'/ordens-servico/<int:ordem_id>\', methods=[\'PUT\'])
+def atualizar_ordem_servico(ordem_id):
+    try:
+        ordem = OrdemServico.query.get_or_404(ordem_id)
+        data = request.get_json()
+        
+        for campo in [\'status\', \'descricao_problema_servico_solicitado\', \'diagnostico\', 
+                     \'servicos_executados\', \'observacoes_internas\']:
+            if campo in data:
+                setattr(ordem, campo, data[campo])
+        
+        if data.get(\'data_conclusao_prevista\'):
+            ordem.data_conclusao_prevista = datetime.strptime(data[\'data_conclusao_prevista\'], \'%Y-%m-%d %H:%M:%S\')
+        
+        if data.get(\'data_conclusao_real\'):
+            ordem.data_conclusao_real = datetime.strptime(data[\'data_conclusao_real\'], \'%Y-%m-%d %H:%M:%S\')
+        
+        if data.get(\'aprovado_cliente\') is not None:
+            ordem.aprovado_cliente = data[\'aprovado_cliente\']
+            if data[\'aprovado_cliente\']:
+                ordem.data_aprovacao = datetime.utcnow()
+        
+        # Recalcular totais
+        ordem.calcular_totais()
+        ordem.data_atualizacao = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Ordem de serviço atualizada com sucesso\',
+            \'data\': ordem.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ordem_servico_bp.route(\'/ordens-servico/<int:ordem_id>/itens\', methods=[\'POST\'])
+def adicionar_item_ordem(ordem_id):
+    try:
+        ordem = OrdemServico.query.get_or_404(ordem_id)
+        data = request.get_json()
+        
+        if not data.get(\'peca_id\'):
+            return jsonify({\'success\': False, \'message\': \'Peça é obrigatória\'}), 400
+        if not data.get(\'quantidade\'):
+            return jsonify({\'success\': False, \'message\': \'Quantidade é obrigatória\'}), 400
+        if not data.get(\'valor_unitario\'):
+            return jsonify({\'success\': False, \'message\': \'Valor unitário é obrigatório\'}), 400
+        
+        item = ItemOrdemServico(
+            ordem_servico_id=ordem_id,
+            peca_id=data[\'peca_id\'],
+            quantidade=data[\'quantidade\'],
+            valor_unitario=data[\'valor_unitario\'],
+            valor_total=data[\'quantidade\'] * data[\'valor_unitario\'],
+            desconto=data.get(\'desconto\', 0)
+        )
+        
+        db.session.add(item)
+        ordem.calcular_totais()
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Item adicionado com sucesso\',
+            \'data\': item.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ordem_servico_bp.route(\'/ordens-servico/<int:ordem_id>/servicos\', methods=[\'POST\'])
+def adicionar_servico_ordem(ordem_id):
+    try:
+        ordem = OrdemServico.query.get_or_404(ordem_id)
+        data = request.get_json()
+        
+        if not data.get(\'tipo_servico_id\'):
+            return jsonify({\'success\': False, \'message\': \'Tipo de serviço é obrigatório\'}), 400
+        if not data.get(\'valor_hora\'):
+            return jsonify({\'success\': False, \'message\': \'Valor da hora é obrigatório\'}), 400
+        
+        servico = ServicoOrdem(
+            ordem_servico_id=ordem_id,
+            tipo_servico_id=data[\'tipo_servico_id\'],
+            descricao=data.get(\'descricao\'),
+            quantidade_horas=data.get(\'quantidade_horas\', 1),
+            valor_hora=data[\'valor_hora\'],
+            valor_total=data.get(\'quantidade_horas\', 1) * data[\'valor_hora\'],
+            desconto=data.get(\'desconto\', 0),
+            mecanico=data.get(\'mecanico\')
+        )
+        
+        db.session.add(servico)
+        ordem.calcular_totais()
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Serviço adicionado com sucesso\',
+            \'data\': servico.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+# Rotas para Tipos de Serviço
+@ordem_servico_bp.route(\'/tipos-servico\', methods=[\'GET\'])
+def listar_tipos_servico():
+    try:
+        tipos = TipoServico.query.filter_by(ativo=True).all()
+        return jsonify({
+            \'success\': True,
+            \'data\': [tipo.to_dict() for tipo in tipos]
+        })
+    except Exception as e:
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+@ordem_servico_bp.route(\'/tipos-servico\', methods=[\'POST\'])
+def criar_tipo_servico():
+    try:
+        data = request.get_json()
+        
+        if not data.get(\'nome\'):
+            return jsonify({\'success\': False, \'message\': \'Nome é obrigatório\'}), 400
+        
+        tipo = TipoServico(
+            nome=data[\'nome\'],
+            descricao=data.get(\'descricao\'),
+            valor_padrao=data.get(\'valor_padrao\'),
+            tempo_estimado_horas=data.get(\'tempo_estimado_horas\')
+        )
+        
+        db.session.add(tipo)
+        db.session.commit()
+        
+        return jsonify({
+            \'success\': True,
+            \'message\': \'Tipo de serviço criado com sucesso\',
+            \'data\': tipo.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({\'success\': False, \'message\': str(e)}), 500
+
+
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)

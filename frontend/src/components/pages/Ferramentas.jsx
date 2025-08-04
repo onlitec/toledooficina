@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+<<<<<<< HEAD
 import {
   Plus,
   Search,
@@ -470,23 +471,249 @@ export function Ferramentas() {
       />
     )
   }
+=======
+import { Plus, Search, Wrench, Edit, Trash2, ArrowRight, ArrowLeft, Calendar } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from '@/components/ui/use-toast'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+export function Ferramentas() {
+  const [ferramentas, setFerramentas] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isFerramentaModalOpen, setIsFerramentaModalOpen] = useState(false)
+  const [isEmprestimoModalOpen, setIsEmprestimoModalOpen] = useState(false)
+  const [isManutencaoModalOpen, setIsManutencaoModalOpen] = useState(false)
+  const [currentFerramenta, setCurrentFerramenta] = useState(null)
+  const [formDataFerramenta, setFormDataFerramenta] = useState({
+    codigo: '', nome: '', descricao: '', tipo: '', marca: '', modelo: '',
+    numero_serie: '', localizacao: '', status: 'disponivel', valor_aquisicao: 0,
+    data_aquisicao: '', fornecedor: '', data_ultima_manutencao: '', frequencia_manutencao_dias: 0,
+    observacoes: ''
+  })
+  const [formDataEmprestimo, setFormDataEmprestimo] = useState({
+    responsavel: '', data_emprestimo: '', data_devolucao_prevista: '', observacoes: ''
+  })
+  const [formDataManutencao, setFormDataManutencao] = useState({
+    tipo: '', descricao: '', data_manutencao: '', custo: 0, responsavel: '', fornecedor_servico: '', observacoes: ''
+  })
+
+  useEffect(() => {
+    fetchFerramentas()
+  }, [])
+
+  const fetchFerramentas = async () => {
+    try {
+      const response = await fetch(`/api/ferramentas?search=${searchTerm}`)
+      const data = await response.json()
+      if (data.success) {
+        setFerramentas(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar ferramentas.', variant: 'destructive' })
+    }
+  }
+
+  // Handlers para Ferramentas
+  const handleFerramentaInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataFerramenta(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleFerramentaSelectChange = (id, value) => {
+    setFormDataFerramenta(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSaveFerramenta = async () => {
+    const method = currentFerramenta ? 'PUT' : 'POST'
+    const url = currentFerramenta ? `/api/ferramentas/${currentFerramenta.id}` : '/api/ferramentas'
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataFerramenta)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsFerramentaModalOpen(false)
+        fetchFerramentas()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar ferramenta.', variant: 'destructive' })
+    }
+  }
+
+  const handleEditFerramenta = (ferramenta) => {
+    setCurrentFerramenta(ferramenta)
+    setFormDataFerramenta({
+      codigo: ferramenta.codigo, nome: ferramenta.nome, descricao: ferramenta.descricao || '',
+      tipo: ferramenta.tipo || '', marca: ferramenta.marca || '', modelo: ferramenta.modelo || '',
+      numero_serie: ferramenta.numero_serie || '', localizacao: ferramenta.localizacao || '',
+      status: ferramenta.status, valor_aquisicao: ferramenta.valor_aquisicao || 0,
+      data_aquisicao: ferramenta.data_aquisicao ? new Date(ferramenta.data_aquisicao).toISOString().split('T')[0] : '',
+      fornecedor: ferramenta.fornecedor || '',
+      data_ultima_manutencao: ferramenta.data_ultima_manutencao ? new Date(ferramenta.data_ultima_manutencao).toISOString().split('T')[0] : '',
+      frequencia_manutencao_dias: ferramenta.frequencia_manutencao_dias || 0,
+      observacoes: ferramenta.observacoes || ''
+    })
+    setIsFerramentaModalOpen(true)
+  }
+
+  const handleDeleteFerramenta = async (id) => {
+    if (!window.confirm('Tem certeza que deseja desativar esta ferramenta?')) return
+    try {
+      const response = await fetch(`/api/ferramentas/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        fetchFerramentas()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao desativar ferramenta.', variant: 'destructive' })
+    }
+  }
+
+  const handleNewFerramentaClick = () => {
+    setCurrentFerramenta(null)
+    setFormDataFerramenta({
+      codigo: '', nome: '', descricao: '', tipo: '', marca: '', modelo: '',
+      numero_serie: '', localizacao: '', status: 'disponivel', valor_aquisicao: 0,
+      data_aquisicao: '', fornecedor: '', data_ultima_manutencao: '', frequencia_manutencao_dias: 0,
+      observacoes: ''
+    })
+    setIsFerramentaModalOpen(true)
+  }
+
+  // Handlers para Empréstimo
+  const handleEmprestimoInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataEmprestimo(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleEmprestarClick = (ferramenta) => {
+    setCurrentFerramenta(ferramenta)
+    setFormDataEmprestimo({
+      responsavel: '',
+      data_emprestimo: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      data_devolucao_prevista: '',
+      observacoes: ''
+    })
+    setIsEmprestimoModalOpen(true)
+  }
+
+  const handleSaveEmprestimo = async () => {
+    if (!currentFerramenta) return
+    try {
+      const response = await fetch(`/api/ferramentas/${currentFerramenta.id}/emprestimo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataEmprestimo)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsEmprestimoModalOpen(false)
+        fetchFerramentas()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao registrar empréstimo.', variant: 'destructive' })
+    }
+  }
+
+  const handleDevolverClick = async (ferramentaId) => {
+    if (!window.confirm('Tem certeza que deseja registrar a devolução desta ferramenta?')) return
+    try {
+      const response = await fetch(`/api/ferramentas/${ferramentaId}/devolucao`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        fetchFerramentas()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao registrar devolução.', variant: 'destructive' })
+    }
+  }
+
+  // Handlers para Manutenção
+  const handleManutencaoInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataManutencao(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleManutencaoClick = (ferramenta) => {
+    setCurrentFerramenta(ferramenta)
+    setFormDataManutencao({
+      tipo: '', descricao: '', data_manutencao: new Date().toISOString().split('T')[0],
+      custo: 0, responsavel: '', fornecedor_servico: '', observacoes: ''
+    })
+    setIsManutencaoModalOpen(true)
+  }
+
+  const handleSaveManutencao = async () => {
+    if (!currentFerramenta) return
+    try {
+      const response = await fetch(`/api/ferramentas/${currentFerramenta.id}/manutencao`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataManutencao)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsManutencaoModalOpen(false)
+        fetchFerramentas()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao registrar manutenção.', variant: 'destructive' })
+    }
+  }
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Ferramentas</h1>
           <p className="text-gray-600">Controle de ferramentas e inventário</p>
         </div>
+<<<<<<< HEAD
         <button
           onClick={handleNovaFerramenta}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <Plus className="h-4 w-4" />
+=======
+        <Button onClick={handleNewFerramentaClick}>
+          <Plus className="h-4 w-4 mr-2" />
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
           Nova Ferramenta
         </button>
       </div>
 
+<<<<<<< HEAD
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white p-4 rounded-lg border">
@@ -537,9 +764,24 @@ export function Ferramentas() {
             </div>
             <AlertTriangle className="h-8 w-8 text-orange-600" />
           </div>
+=======
+      {/* Search */}
+      <div className="flex items-center space-x-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar ferramentas por código, nome ou série..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') fetchFerramentas() }}
+            className="pl-10"
+          />
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
         </div>
+        <Button onClick={fetchFerramentas}>Buscar</Button>
       </div>
 
+<<<<<<< HEAD
       {/* Filtros */}
       <div className="flex items-center space-x-4">
         <div className="relative flex-1 max-w-md">
@@ -694,3 +936,245 @@ export function Ferramentas() {
     </div>
   )
 }
+=======
+      {/* Content */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Wrench className="h-5 w-5 mr-2" />
+            Lista de Ferramentas
+          </CardTitle>
+          <CardDescription>
+            Visualize e gerencie as ferramentas cadastradas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Código</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Localização</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Responsável</TableHead>
+                <TableHead>Próx. Manutenção</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ferramentas.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan="8" className="text-center">Nenhuma ferramenta encontrada.</TableCell>
+                </TableRow>
+              ) : (
+                ferramentas.map(ferramenta => (
+                  <TableRow key={ferramenta.id}>
+                    <TableCell className="font-medium">{ferramenta.codigo}</TableCell>
+                    <TableCell>{ferramenta.nome}</TableCell>
+                    <TableCell>{ferramenta.tipo}</TableCell>
+                    <TableCell>{ferramenta.localizacao}</TableCell>
+                    <TableCell>{ferramenta.status}</TableCell>
+                    <TableCell>{ferramenta.responsavel_atual || 'N/A'}</TableCell>
+                    <TableCell>{ferramenta.proxima_manutencao || 'N/A'}</TableCell>
+                    <TableCell className="flex space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditFerramenta(ferramenta)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      {ferramenta.status === 'disponivel' ? (
+                        <Button variant="outline" size="sm" onClick={() => handleEmprestarClick(ferramenta)}>
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => handleDevolverClick(ferramenta.id)}>
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" onClick={() => handleManutencaoClick(ferramenta)}>
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteFerramenta(ferramenta.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Modal de Cadastro/Edição de Ferramenta */}
+      <Dialog open={isFerramentaModalOpen} onOpenChange={setIsFerramentaModalOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>{currentFerramenta ? 'Editar Ferramenta' : 'Nova Ferramenta'}</DialogTitle>
+            <DialogDescription>
+              Preencha os dados da ferramenta.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="codigo">Código</Label>
+              <Input id="codigo" value={formDataFerramenta.codigo} onChange={handleFerramentaInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome</Label>
+              <Input id="nome" value={formDataFerramenta.nome} onChange={handleFerramentaInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Input id="descricao" value={formDataFerramenta.descricao} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="tipo">Tipo</Label>
+              <Input id="tipo" value={formDataFerramenta.tipo} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="marca">Marca</Label>
+              <Input id="marca" value={formDataFerramenta.marca} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="modelo">Modelo</Label>
+              <Input id="modelo" value={formDataFerramenta.modelo} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="numero_serie">Número de Série</Label>
+              <Input id="numero_serie" value={formDataFerramenta.numero_serie} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="localizacao">Localização</Label>
+              <Input id="localizacao" value={formDataFerramenta.localizacao} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select id="status" value={formDataFerramenta.status} onValueChange={(value) => handleFerramentaSelectChange('status', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="disponivel">Disponível</SelectItem>
+                  <SelectItem value="emprestada">Emprestada</SelectItem>
+                  <SelectItem value="manutencao">Em Manutenção</SelectItem>
+                  <SelectItem value="desativada">Desativada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="valor_aquisicao">Valor Aquisição</Label>
+              <Input id="valor_aquisicao" type="number" step="0.01" value={formDataFerramenta.valor_aquisicao} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_aquisicao">Data Aquisição</Label>
+              <Input id="data_aquisicao" type="date" value={formDataFerramenta.data_aquisicao} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fornecedor">Fornecedor</Label>
+              <Input id="fornecedor" value={formDataFerramenta.fornecedor} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_ultima_manutencao">Última Manutenção</Label>
+              <Input id="data_ultima_manutencao" type="date" value={formDataFerramenta.data_ultima_manutencao} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="frequencia_manutencao_dias">Frequência Manutenção (dias)</Label>
+              <Input id="frequencia_manutencao_dias" type="number" value={formDataFerramenta.frequencia_manutencao_dias} onChange={handleFerramentaInputChange} />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input id="observacoes" value={formDataFerramenta.observacoes} onChange={handleFerramentaInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsFerramentaModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveFerramenta}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Empréstimo de Ferramenta */}
+      <Dialog open={isEmprestimoModalOpen} onOpenChange={setIsEmprestimoModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Emprestar Ferramenta: {currentFerramenta?.nome}</DialogTitle>
+            <DialogDescription>
+              Registre o empréstimo da ferramenta.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="responsavel">Responsável</Label>
+              <Input id="responsavel" value={formDataEmprestimo.responsavel} onChange={handleEmprestimoInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_emprestimo">Data Empréstimo</Label>
+              <Input id="data_emprestimo" type="datetime-local" value={formDataEmprestimo.data_emprestimo} onChange={handleEmprestimoInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_devolucao_prevista">Devolução Prevista</Label>
+              <Input id="data_devolucao_prevista" type="datetime-local" value={formDataEmprestimo.data_devolucao_prevista} onChange={handleEmprestimoInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input id="observacoes" value={formDataEmprestimo.observacoes} onChange={handleEmprestimoInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEmprestimoModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveEmprestimo}>Registrar Empréstimo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Manutenção de Ferramenta */}
+      <Dialog open={isManutencaoModalOpen} onOpenChange={setIsManutencaoModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Registrar Manutenção: {currentFerramenta?.nome}</DialogTitle>
+            <DialogDescription>
+              Registre uma manutenção para a ferramenta.
+              </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="tipo">Tipo de Manutenção</Label>
+              <Input id="tipo" value={formDataManutencao.tipo} onChange={handleManutencaoInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Input id="descricao" value={formDataManutencao.descricao} onChange={handleManutencaoInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_manutencao">Data Manutenção</Label>
+              <Input id="data_manutencao" type="date" value={formDataManutencao.data_manutencao} onChange={handleManutencaoInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="custo">Custo</Label>
+              <Input id="custo" type="number" step="0.01" value={formDataManutencao.custo} onChange={handleManutencaoInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="responsavel">Responsável</Label>
+              <Input id="responsavel" value={formDataManutencao.responsavel} onChange={handleManutencaoInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fornecedor_servico">Fornecedor do Serviço</Label>
+              <Input id="fornecedor_servico" value={formDataManutencao.fornecedor_servico} onChange={handleManutencaoInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input id="observacoes" value={formDataManutencao.observacoes} onChange={handleManutencaoInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsManutencaoModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveManutencao}>Registrar Manutenção</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)

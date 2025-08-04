@@ -65,7 +65,7 @@ class Peca(db.Model):
     
     # Estoque
     quantidade_atual = db.Column(db.Integer, default=0)
-    quantidade_minima = db.Column(db.Integer, default=0)
+    quantidade_minima = db.Column(db.Integer, nullable=False, default=0)
     quantidade_maxima = db.Column(db.Integer, default=0)
     localizacao = db.Column(db.String(50))  # prateleira, gaveta, etc.
     
@@ -157,4 +157,5 @@ class MovimentacaoEstoque(db.Model):
             'usuario_id': self.usuario_id,
             'data_movimentacao': self.data_movimentacao.isoformat() if self.data_movimentacao else None
         }
+
 

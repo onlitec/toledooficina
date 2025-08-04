@@ -1,9 +1,18 @@
 
 import { useState, useEffect } from 'react'
+<<<<<<< HEAD
 import { useSystem } from '@/contexts/SystemContext'
 import { Settings, Building, Mail, Bell, Database, Save, Upload, Eye, EyeOff, MessageCircle, AlertTriangle, Users } from 'lucide-react'
 import { UsersAdmin } from './UsersAdmin'
 import { useNotify } from '../ui/notification'
+=======
+import { Settings, Building, Mail, Bell, Database, Save, Upload, Eye, EyeOff, MessageCircle, AlertTriangle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { toast } from '@/components/ui/use-toast'
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
 
 export function Configuracoes() {
   const notify = useNotify()
@@ -43,6 +52,7 @@ export function Configuracoes() {
     nome_remetente: ''
   })
 
+<<<<<<< HEAD
   const [sistemaData, setSistemaData] = useState({
     titulo_empresa: systemConfig.titulo_empresa,
     logotipo_arquivo: null,
@@ -57,6 +67,23 @@ export function Configuracoes() {
       logotipo_info: systemConfig.logotipo_info
     }))
   }, [systemConfig])
+=======
+  const [notificacoesData, setNotificacoesData] = useState({
+    notificar_nova_os: true,
+    notificar_os_concluida: true,
+    notificar_estoque_baixo: true,
+    notificar_aniversario_cliente: false,
+    notificar_manutencao_ferramenta: true,
+    email_notificacoes: ''
+  })
+
+  const [sistemaData, setSistemaData] = useState({
+    modo_producao: false,
+    backup_automatico: true,
+    frequencia_backup_dias: 7,
+    caminho_backup: '/var/lib/erp_oficina/backups'
+  })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
 
   // Carregar dados ao montar o componente
   useEffect(() => {
@@ -113,11 +140,31 @@ export function Configuracoes() {
         }
       }
 
+<<<<<<< HEAD
       // Carregar configurações do sistema
       await carregarSistema()
+=======
+      // Carregar configurações de notificações
+      const notificacoesResponse = await fetch('/api/configuracoes/notificacoes')
+      if (notificacoesResponse.ok) {
+        const notificacoesResult = await notificacoesResponse.json()
+        if (notificacoesResult.success) {
+          setNotificacoesData(notificacoesResult.data)
+        }
+      }
+
+      // Carregar configurações do sistema
+      const sistemaResponse = await fetch('/api/configuracoes/sistema')
+      if (sistemaResponse.ok) {
+        const sistemaResult = await sistemaResponse.json()
+        if (sistemaResult.success) {
+          setSistemaData(sistemaResult.data)
+        }
+      }
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
 
     } catch (error) {
-      console.error('Erro ao carregar configurações:', error)
+      toast({ title: 'Erro', description: 'Falha ao carregar configurações.', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
@@ -166,12 +213,20 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
+<<<<<<< HEAD
         notify.success('Configurações da empresa salvas com sucesso!')
+=======
+        toast({ title: 'Sucesso', description: 'Configurações da empresa salvas com sucesso!' })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
       } else {
-        throw new Error(result.message)
+        toast({ title: 'Erro', description: result.message, variant: 'destructive' })
       }
     } catch (error) {
+<<<<<<< HEAD
       notify.error('Erro ao salvar configurações da empresa: ' + error.message)
+=======
+      toast({ title: 'Erro', description: 'Erro ao salvar configurações da empresa.', variant: 'destructive' })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
     } finally {
       setLoading(false)
     }
@@ -190,12 +245,20 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
+<<<<<<< HEAD
         notify.success('Configurações de email salvas com sucesso!')
+=======
+        toast({ title: 'Sucesso', description: 'Configurações de email salvas com sucesso!' })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
       } else {
-        throw new Error(result.message)
+        toast({ title: 'Erro', description: result.message, variant: 'destructive' })
       }
     } catch (error) {
+<<<<<<< HEAD
       notify.error('Erro ao salvar configurações de email: ' + error.message)
+=======
+      toast({ title: 'Erro', description: 'Erro ao salvar configurações de email.', variant: 'destructive' })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
     } finally {
       setLoading(false)
     }
@@ -214,12 +277,68 @@ export function Configuracoes() {
 
       const result = await response.json()
       if (result.success) {
+<<<<<<< HEAD
         notify.success('Email de teste enviado com sucesso!')
+=======
+        toast({ title: 'Sucesso', description: 'Email de teste enviado com sucesso!' })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
       } else {
-        throw new Error(result.message)
+        toast({ title: 'Erro', description: result.message, variant: 'destructive' })
       }
     } catch (error) {
+<<<<<<< HEAD
       notify.error('Erro ao testar email: ' + error.message)
+=======
+      toast({ title: 'Erro', description: 'Erro ao testar email.', variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const salvarNotificacoes = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/configuracoes/notificacoes', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(notificacoesData)
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        toast({ title: 'Sucesso', description: 'Configurações de notificações salvas com sucesso!' })
+      } else {
+        toast({ title: 'Erro', description: result.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Erro ao salvar configurações de notificações.', variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const salvarSistema = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/configuracoes/sistema', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(sistemaData)
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        toast({ title: 'Sucesso', description: 'Configurações do sistema salvas com sucesso!' })
+      } else {
+        toast({ title: 'Erro', description: result.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Erro ao salvar configurações do sistema.', variant: 'destructive' })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
     } finally {
       setLoading(false)
     }
@@ -427,26 +546,22 @@ export function Configuracoes() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Razão Social *
-                    </label>
-                    <input
+                    <Label htmlFor="razao_social">Razão Social *</Label>
+                    <Input
+                      id="razao_social"
                       type="text"
                       value={empresaData.razao_social}
                       onChange={(e) => setEmpresaData(prev => ({...prev, razao_social: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Razão social da empresa"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nome Fantasia
-                    </label>
-                    <input
+                    <Label htmlFor="nome_fantasia">Nome Fantasia</Label>
+                    <Input
+                      id="nome_fantasia"
                       type="text"
                       value={empresaData.nome_fantasia}
                       onChange={(e) => setEmpresaData(prev => ({...prev, nome_fantasia: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Nome fantasia"
                     />
                   </div>
@@ -454,52 +569,198 @@ export function Configuracoes() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      CNPJ
-                    </label>
-                    <input
+                    <Label htmlFor="cnpj">CNPJ</Label>
+                    <Input
+                      id="cnpj"
                       type="text"
                       value={empresaData.cnpj}
                       onChange={(e) => setEmpresaData(prev => ({...prev, cnpj: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="00.000.000/0000-00"
                     />
                   </div>
                   <div>
+<<<<<<< HEAD
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Telefone
                     </label>
                     <input
+=======
+                    <Label htmlFor="inscricao_estadual">Inscrição Estadual</Label>
+                    <Input
+                      id="inscricao_estadual"
                       type="text"
-                      value={empresaData.telefone}
-                      onChange={(e) => setEmpresaData(prev => ({...prev, telefone: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="(00) 0000-0000"
+                      value={empresaData.inscricao_estadual}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, inscricao_estadual: e.target.value}))}
+                      placeholder="Inscrição estadual"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      E-mail
-                    </label>
-                    <input
-                      type="email"
-                      value={empresaData.email}
-                      onChange={(e) => setEmpresaData(prev => ({...prev, email: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="contato@empresa.com"
+                    <Label htmlFor="inscricao_municipal">Inscrição Municipal</Label>
+                    <Input
+                      id="inscricao_municipal"
+                      type="text"
+                      value={empresaData.inscricao_municipal}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, inscricao_municipal: e.target.value}))}
+                      placeholder="Inscrição municipal"
                     />
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="telefone">Telefone</Label>
+                    <Input
+                      id="telefone"
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
+                      type="text"
+                      value={empresaData.telefone}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, telefone: e.target.value}))}
+                      placeholder="(00) 0000-0000"
+                    />
+                  </div>
+                  <div>
+<<<<<<< HEAD
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      E-mail
+                    </label>
+                    <input
+=======
+                    <Label htmlFor="celular">Celular</Label>
+                    <Input
+                      id="celular"
+                      type="text"
+                      value={empresaData.celular}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, celular: e.target.value}))}
+                      placeholder="(00) 00000-0000"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="email">E-mail</Label>
+                    <Input
+                      id="email"
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
+                      type="email"
+                      value={empresaData.email}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, email: e.target.value}))}
+                      placeholder="contato@empresa.com"
+                    />
+                  </div>
+<<<<<<< HEAD
+=======
+                  <div>
+                    <Label htmlFor="site">Site</Label>
+                    <Input
+                      id="site"
+                      type="text"
+                      value={empresaData.site}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, site: e.target.value}))}
+                      placeholder="https://www.empresa.com"
+                    />
+                  </div>
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="endereco">Endereço</Label>
+                    <Input
+                      id="endereco"
+                      type="text"
+                      value={empresaData.endereco}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, endereco: e.target.value}))}
+                      placeholder="Rua, Avenida, etc."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="numero">Número</Label>
+                    <Input
+                      id="numero"
+                      type="text"
+                      value={empresaData.numero}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, numero: e.target.value}))}
+                      placeholder="123"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="complemento">Complemento</Label>
+                    <Input
+                      id="complemento"
+                      type="text"
+                      value={empresaData.complemento}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, complemento: e.target.value}))}
+                      placeholder="Apto, Sala, etc."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bairro">Bairro</Label>
+                    <Input
+                      id="bairro"
+                      type="text"
+                      value={empresaData.bairro}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, bairro: e.target.value}))}
+                      placeholder="Centro"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="cidade">Cidade</Label>
+                    <Input
+                      id="cidade"
+                      type="text"
+                      value={empresaData.cidade}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, cidade: e.target.value}))}
+                      placeholder="São Paulo"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="estado">Estado</Label>
+                    <Input
+                      id="estado"
+                      type="text"
+                      value={empresaData.estado}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, estado: e.target.value}))}
+                      placeholder="SP"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cep">CEP</Label>
+                    <Input
+                      id="cep"
+                      type="text"
+                      value={empresaData.cep}
+                      onChange={(e) => setEmpresaData(prev => ({...prev, cep: e.target.value}))}
+                      placeholder="00000-000"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="logotipo_path">Logotipo (URL)</Label>
+                  <Input
+                    id="logotipo_path"
+                    type="text"
+                    value={empresaData.logotipo_path}
+                    onChange={(e) => setEmpresaData(prev => ({...prev, logotipo_path: e.target.value}))}
+                    placeholder="https://seusite.com/logo.png"
+                  />
+                </div>
+
                 <div className="flex justify-end">
-                  <button
+                  <Button
                     onClick={salvarEmpresa}
                     disabled={loading}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     {loading ? 'Salvando...' : 'Salvar Configurações'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -519,26 +780,22 @@ export function Configuracoes() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Servidor SMTP *
-                    </label>
-                    <input
+                    <Label htmlFor="servidor_smtp">Servidor SMTP *</Label>
+                    <Input
+                      id="servidor_smtp"
                       type="text"
                       value={emailData.servidor_smtp}
                       onChange={(e) => setEmailData(prev => ({...prev, servidor_smtp: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="smtp.gmail.com"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Porta SMTP *
-                    </label>
-                    <input
+                    <Label htmlFor="porta_smtp">Porta SMTP *</Label>
+                    <Input
+                      id="porta_smtp"
                       type="number"
                       value={emailData.porta_smtp}
                       onChange={(e) => setEmailData(prev => ({...prev, porta_smtp: parseInt(e.target.value)}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="587"
                     />
                   </div>
@@ -546,56 +803,86 @@ export function Configuracoes() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Usuário SMTP *
-                    </label>
-                    <input
+                    <Label htmlFor="usuario_email">Usuário SMTP *</Label>
+                    <Input
+                      id="usuario_email"
                       type="text"
                       value={emailData.usuario_email}
                       onChange={(e) => setEmailData(prev => ({...prev, usuario_email: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="seu-email@gmail.com"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Senha SMTP *
-                    </label>
+                    <Label htmlFor="senha_email">Senha SMTP *</Label>
                     <div className="relative">
-                      <input
+                      <Input
+                        id="senha_email"
                         type={showPassword ? "text" : "password"}
                         value={emailData.senha_email}
                         onChange={(e) => setEmailData(prev => ({...prev, senha_email: e.target.value}))}
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Senha ou token de aplicativo"
+                        placeholder="Sua senha de email"
                       />
-                      <button
+                      <Button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="usar_tls"
+                      checked={emailData.usar_tls}
+                      onCheckedChange={(checked) => setEmailData(prev => ({...prev, usar_tls: checked}))}
+                    />
+                    <Label htmlFor="usar_tls">Usar TLS/SSL</Label>
+                  </div>
+                  <div>
+                    <Label htmlFor="email_remetente">Email Remetente</Label>
+                    <Input
+                      id="email_remetente"
+                      type="email"
+                      value={emailData.email_remetente}
+                      onChange={(e) => setEmailData(prev => ({...prev, email_remetente: e.target.value}))}
+                      placeholder="email-de-envio@empresa.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nome_remetente">Nome Remetente</Label>
+                  <Input
+                    id="nome_remetente"
+                    type="text"
+                    value={emailData.nome_remetente}
+                    onChange={(e) => setEmailData(prev => ({...prev, nome_remetente: e.target.value}))}
+                    placeholder="Nome da sua Oficina"
+                  />
+                </div>
+
                 <div className="flex justify-end space-x-2">
-                  <button
+                  <Button
                     onClick={testarEmail}
                     disabled={loading}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    variant="outline"
                   >
-                    Testar Configuração
-                  </button>
-                  <button
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    {loading ? 'Testando...' : 'Testar Conexão'}
+                  </Button>
+                  <Button
                     onClick={salvarEmail}
                     disabled={loading}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     {loading ? 'Salvando...' : 'Salvar Configurações'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -610,15 +897,19 @@ export function Configuracoes() {
                 <Bell className="h-5 w-5 inline mr-2" />
                 Configurações de Notificações
               </h3>
-              <p className="text-sm text-gray-600 mb-6">Configure quando e como receber notificações</p>
+              <p className="text-sm text-gray-600 mb-6">Configure quais eventos devem gerar notificações</p>
               
               <div className="space-y-6">
-                {/* Seção Email */}
-                <div className="border-b border-gray-200 pb-6">
-                  <div className="flex items-center mb-4">
-                    <Mail className="h-5 w-5 text-blue-500 mr-2" />
-                    <h4 className="text-lg font-medium text-gray-900">Notificações por E-mail</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="notificar_nova_os"
+                      checked={notificacoesData.notificar_nova_os}
+                      onCheckedChange={(checked) => setNotificacoesData(prev => ({...prev, notificar_nova_os: checked}))}
+                    />
+                    <Label htmlFor="notificar_nova_os">Notificar Nova Ordem de Serviço</Label>
                   </div>
+<<<<<<< HEAD
                   
                   <div className="space-y-4">
                     <div>
@@ -665,20 +956,64 @@ export function Configuracoes() {
                         </div>
                       </div>
                     </div>
+=======
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="notificar_os_concluida"
+                      checked={notificacoesData.notificar_os_concluida}
+                      onCheckedChange={(checked) => setNotificacoesData(prev => ({...prev, notificar_os_concluida: checked}))}
+                    />
+                    <Label htmlFor="notificar_os_concluida">Notificar OS Concluída</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="notificar_estoque_baixo"
+                      checked={notificacoesData.notificar_estoque_baixo}
+                      onCheckedChange={(checked) => setNotificacoesData(prev => ({...prev, notificar_estoque_baixo: checked}))}
+                    />
+                    <Label htmlFor="notificar_estoque_baixo">Notificar Estoque Baixo</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="notificar_aniversario_cliente"
+                      checked={notificacoesData.notificar_aniversario_cliente}
+                      onCheckedChange={(checked) => setNotificacoesData(prev => ({...prev, notificar_aniversario_cliente: checked}))}
+                    />
+                    <Label htmlFor="notificar_aniversario_cliente">Notificar Aniversário de Cliente</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="notificar_manutencao_ferramenta"
+                      checked={notificacoesData.notificar_manutencao_ferramenta}
+                      onCheckedChange={(checked) => setNotificacoesData(prev => ({...prev, notificar_manutencao_ferramenta: checked}))}
+                    />
+                    <Label htmlFor="notificar_manutencao_ferramenta">Notificar Manutenção de Ferramenta</Label>
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
                   </div>
                 </div>
-                
-                <div className="flex justify-end space-x-2">
-                  <button className="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50">
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Testar WhatsApp
-                  </button>
-                  <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+
+                <div className="space-y-2">
+                  <Label htmlFor="email_notificacoes">Enviar Notificações para o E-mail</Label>
+                  <Input
+                    id="email_notificacoes"
+                    type="email"
+                    value={notificacoesData.email_notificacoes}
+                    onChange={(e) => setNotificacoesData(prev => ({...prev, email_notificacoes: e.target.value}))}
+                    placeholder="email-para-notificacoes@empresa.com"
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    onClick={salvarNotificacoes}
+                    disabled={loading}
+                  >
                     <Save className="h-4 w-4 mr-2" />
-                    Salvar Configurações
-                  </button>
+                    {loading ? 'Salvando...' : 'Salvar Configurações'}
+                  </Button>
                 </div>
               </div>
+<<<<<<< HEAD
             </div>
           </div>
         )}
@@ -694,6 +1029,8 @@ export function Configuracoes() {
               <p className="text-sm text-gray-600 mb-6">Cadastre, edite e gerencie usuários do sistema</p>
               
               <UsersAdmin />
+=======
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
             </div>
           </div>
         )}
@@ -706,6 +1043,7 @@ export function Configuracoes() {
                 <Database className="h-5 w-5 inline mr-2" />
                 Configurações do Sistema
               </h3>
+<<<<<<< HEAD
               <p className="text-sm text-gray-600 mb-6">Configure título da empresa e logotipo</p>
               
               <div className="space-y-8">
@@ -799,6 +1137,58 @@ o Identidade Visual */}
                     <Save className="h-4 w-4 mr-2" />
                     {loading ? 'Salvando...' : 'Salvar Configurações'}
                   </button>
+=======
+              <p className="text-sm text-gray-600 mb-6">Configurações gerais do sistema e banco de dados</p>
+              
+              <div className="space-y-6">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="modo_producao"
+                    checked={sistemaData.modo_producao}
+                    onCheckedChange={(checked) => setSistemaData(prev => ({...prev, modo_producao: checked}))}
+                  />
+                  <Label htmlFor="modo_producao">Modo de Produção (Ativar para ambiente de produção)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="backup_automatico"
+                    checked={sistemaData.backup_automatico}
+                    onCheckedChange={(checked) => setSistemaData(prev => ({...prev, backup_automatico: checked}))}
+                  />
+                  <Label htmlFor="backup_automatico">Backup Automático do Banco de Dados</Label>
+                </div>
+                {sistemaData.backup_automatico && (
+                  <div className="space-y-2">
+                    <Label htmlFor="frequencia_backup_dias">Frequência de Backup (dias)</Label>
+                    <Input
+                      id="frequencia_backup_dias"
+                      type="number"
+                      value={sistemaData.frequencia_backup_dias}
+                      onChange={(e) => setSistemaData(prev => ({...prev, frequencia_backup_dias: parseInt(e.target.value)}))}
+                      placeholder="7"
+                    />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="caminho_backup">Caminho do Backup</Label>
+                  <Input
+                    id="caminho_backup"
+                    type="text"
+                    value={sistemaData.caminho_backup}
+                    onChange={(e) => setSistemaData(prev => ({...prev, caminho_backup: e.target.value}))}
+                    placeholder="/var/lib/erp_oficina/backups"
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    onClick={salvarSistema}
+                    disabled={loading}
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {loading ? 'Salvando...' : 'Salvar Configurações'}
+                  </Button>
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
                 </div>
               </div>
             </div>
@@ -808,3 +1198,5 @@ o Identidade Visual */}
     </div>
   )
 }
+
+

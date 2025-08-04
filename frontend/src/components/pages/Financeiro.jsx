@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+<<<<<<< HEAD
 import {
   Plus,
   Search,
@@ -325,15 +326,267 @@ export function Financeiro() {
         </div>
       </div>
     )
+=======
+import { Plus, Search, DollarSign, Edit, Trash2, ArrowRight, ArrowLeft, Calendar, TrendingUp, TrendingDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from '@/components/ui/use-toast'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+export function Financeiro() {
+  const [contasReceber, setContasReceber] = useState([])
+  const [contasPagar, setContasPagar] = useState([])
+  const [categoriasFinanceiras, setCategoriasFinanceiras] = useState([])
+  const [clientes, setClientes] = useState([])
+  const [fornecedores, setFornecedores] = useState([])
+  const [dashboardData, setDashboardData] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isContaModalOpen, setIsContaModalOpen] = useState(false)
+  const [isPagamentoModalOpen, setIsPagamentoModalOpen] = useState(false)
+  const [currentConta, setCurrentConta] = useState(null)
+  const [currentContaType, setCurrentContaType] = useState(null) // 'receber' or 'pagar'
+  const [formDataConta, setFormDataConta] = useState({
+    cliente_id: '', categoria_financeira_id: '', descricao: '', valor_original: 0,
+    data_emissao: '', data_vencimento: '', observacoes: '', fornecedor_id: ''
+  })
+  const [formDataPagamento, setFormDataPagamento] = useState({
+    valor: 0, forma_pagamento: '', data_pagamento: '', numero_documento: '', observacoes: ''
+  })
+
+  useEffect(() => {
+    fetchContasReceber()
+    fetchContasPagar()
+    fetchCategoriasFinanceiras()
+    fetchClientes()
+    fetchFornecedores()
+    fetchDashboardData()
+  }, [])
+
+  const fetchContasReceber = async () => {
+    try {
+      const response = await fetch(`/api/contas-receber?search=${searchTerm}`)
+      const data = await response.json()
+      if (data.success) {
+        setContasReceber(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar contas a receber.', variant: 'destructive' })
+    }
+  }
+
+  const fetchContasPagar = async () => {
+    try {
+      const response = await fetch(`/api/contas-pagar?search=${searchTerm}`)
+      const data = await response.json()
+      if (data.success) {
+        setContasPagar(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar contas a pagar.', variant: 'destructive' })
+    }
+  }
+
+  const fetchCategoriasFinanceiras = async () => {
+    try {
+      const response = await fetch('/api/categorias-financeiras')
+      const data = await response.json()
+      if (data.success) {
+        setCategoriasFinanceiras(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar categorias financeiras.', variant: 'destructive' })
+    }
+  }
+
+  const fetchClientes = async () => {
+    try {
+      const response = await fetch('/api/clientes')
+      const data = await response.json()
+      if (data.success) {
+        setClientes(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar clientes.', variant: 'destructive' })
+    }
+  }
+
+  const fetchFornecedores = async () => {
+    try {
+      const response = await fetch('/api/fornecedores')
+      const data = await response.json()
+      if (data.success) {
+        setFornecedores(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar fornecedores.', variant: 'destructive' })
+    }
+  }
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/dashboard-financeiro')
+      const data = await response.json()
+      if (data.success) {
+        setDashboardData(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar dados do dashboard financeiro.', variant: 'destructive' })
+    }
+  }
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataConta(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSelectChange = (id, value) => {
+    setFormDataConta(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSaveConta = async () => {
+    const method = currentConta ? 'PUT' : 'POST'
+    const url = currentConta ? `/api/${currentContaType === 'receber' ? 'contas-receber' : 'contas-pagar'}/${currentConta.id}` : `/api/${currentContaType === 'receber' ? 'contas-receber' : 'contas-pagar'}`
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataConta)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsContaModalOpen(false)
+        if (currentContaType === 'receber') fetchContasReceber()
+        else fetchContasPagar()
+        fetchDashboardData()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar conta.', variant: 'destructive' })
+    }
+  }
+
+  const handleEditConta = (conta, type) => {
+    setCurrentConta(conta)
+    setCurrentContaType(type)
+    setFormDataConta({
+      cliente_id: conta.cliente_id || '',
+      categoria_financeira_id: conta.categoria_financeira_id || '',
+      descricao: conta.descricao || '',
+      valor_original: conta.valor_original || 0,
+      data_emissao: conta.data_emissao ? new Date(conta.data_emissao).toISOString().split('T')[0] : '',
+      data_vencimento: conta.data_vencimento ? new Date(conta.data_vencimento).toISOString().split('T')[0] : '',
+      observacoes: conta.observacoes || '',
+      fornecedor_id: conta.fornecedor_id || ''
+    })
+    setIsContaModalOpen(true)
+  }
+
+  const handleDeleteConta = async (id, type) => {
+    if (!window.confirm(`Tem certeza que deseja desativar esta conta a ${type}?`)) return
+    try {
+      const response = await fetch(`/api/${type === 'receber' ? 'contas-receber' : 'contas-pagar'}/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        if (type === 'receber') fetchContasReceber()
+        else fetchContasPagar()
+        fetchDashboardData()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: `Falha ao desativar conta a ${type}.`, variant: 'destructive' })
+    }
+  }
+
+  const handleNewContaClick = (type) => {
+    setCurrentConta(null)
+    setCurrentContaType(type)
+    setFormDataConta({
+      cliente_id: '', categoria_financeira_id: '', descricao: '', valor_original: 0,
+      data_emissao: new Date().toISOString().split('T')[0], data_vencimento: '', observacoes: '', fornecedor_id: ''
+    })
+    setIsContaModalOpen(true)
+  }
+
+  const handlePagamentoInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataPagamento(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handlePagamentoSelectChange = (id, value) => {
+    setFormDataPagamento(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handlePagarReceberClick = (conta, type) => {
+    setCurrentConta(conta)
+    setCurrentContaType(type)
+    setFormDataPagamento({
+      valor: conta.valor_saldo || conta.valor_original,
+      forma_pagamento: '',
+      data_pagamento: new Date().toISOString().split('T')[0],
+      numero_documento: '',
+      observacoes: ''
+    })
+    setIsPagamentoModalOpen(true)
+  }
+
+  const handleSavePagamento = async () => {
+    if (!currentConta || !currentContaType) return
+
+    const url = `/api/${currentContaType === 'receber' ? 'contas-receber' : 'contas-pagar'}/${currentConta.id}/pagamento`
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataPagamento)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsPagamentoModalOpen(false)
+        if (currentContaType === 'receber') fetchContasReceber()
+        else fetchContasPagar()
+        fetchDashboardData()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao registrar pagamento/recebimento.', variant: 'destructive' })
+    }
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Financeiro</h1>
           <p className="text-gray-600">Controle financeiro da oficina</p>
         </div>
+<<<<<<< HEAD
         <button
           onClick={handleNovaConta}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -486,7 +739,308 @@ export function Financeiro() {
           )}
         </div>
       </div>
+=======
+        <div className="flex space-x-2">
+          <Button onClick={() => handleNewContaClick('receber')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Conta a Receber
+          </Button>
+          <Button onClick={() => handleNewContaClick('pagar')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Conta a Pagar
+          </Button>
+        </div>
+      </div>
+
+      {/* Dashboard Financeiro */}
+      {dashboardData && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Contas a Receber em Aberto</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">R$ {dashboardData.contas_receber_abertas.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">Total de contas a receber</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Contas a Pagar em Aberto</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">R$ {dashboardData.contas_pagar_abertas.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">Total de contas a pagar</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Contas a Receber Vencidas</CardTitle>
+              <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dashboardData.contas_receber_vencidas}</div>
+              <p className="text-xs text-muted-foreground">Contas vencidas</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Contas a Pagar Vencidas</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dashboardData.contas_pagar_vencidas}</div>
+              <p className="text-xs text-muted-foreground">Contas vencidas</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Content Tabs */}
+      <Tabs defaultValue="contas-receber" className="w-full">
+        <TabsList>
+          <TabsTrigger value="contas-receber">Contas a Receber</TabsTrigger>
+          <TabsTrigger value="contas-pagar">Contas a Pagar</TabsTrigger>
+        </TabsList>
+        <TabsContent value="contas-receber">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <DollarSign className="h-5 w-5 mr-2" />
+                Lista de Contas a Receber
+              </CardTitle>
+              <CardDescription>
+                Gerencie as contas a receber da oficina.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead>Valor Original</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contasReceber.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="6" className="text-center">Nenhuma conta a receber encontrada.</TableCell>
+                    </TableRow>
+                  ) : (
+                    contasReceber.map(conta => (
+                      <TableRow key={conta.id}>
+                        <TableCell className="font-medium">{conta.descricao}</TableCell>
+                        <TableCell>{clientes.find(c => c.id === conta.cliente_id)?.nome || 'N/A'}</TableCell>
+                        <TableCell>{conta.data_vencimento}</TableCell>
+                        <TableCell>R$ {conta.valor_original.toFixed(2)}</TableCell>
+                        <TableCell>{conta.status}</TableCell>
+                        <TableCell className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEditConta(conta, 'receber')}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {conta.status === 'aberta' && (
+                            <Button variant="outline" size="sm" onClick={() => handlePagarReceberClick(conta, 'receber')}>
+                              <ArrowLeft className="h-4 w-4" /> Receber
+                            </Button>
+                          )}
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteConta(conta.id, 'receber')}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="contas-pagar">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <DollarSign className="h-5 w-5 mr-2" />
+                Lista de Contas a Pagar
+              </CardTitle>
+              <CardDescription>
+                Gerencie as contas a pagar da oficina.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Fornecedor</TableHead>
+                    <TableHead>Vencimento</TableHead>
+                    <TableHead>Valor Original</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contasPagar.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="6" className="text-center">Nenhuma conta a pagar encontrada.</TableCell>
+                    </TableRow>
+                  ) : (
+                    contasPagar.map(conta => (
+                      <TableRow key={conta.id}>
+                        <TableCell className="font-medium">{conta.descricao}</TableCell>
+                        <TableCell>{fornecedores.find(f => f.id === conta.fornecedor_id)?.nome || 'N/A'}</TableCell>
+                        <TableCell>{conta.data_vencimento}</TableCell>
+                        <TableCell>R$ {conta.valor_original.toFixed(2)}</TableCell>
+                        <TableCell>{conta.status}</TableCell>
+                        <TableCell className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEditConta(conta, 'pagar')}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {conta.status === 'aberta' && (
+                            <Button variant="outline" size="sm" onClick={() => handlePagarReceberClick(conta, 'pagar')}>
+                              <ArrowRight className="h-4 w-4" /> Pagar
+                            </Button>
+                          )}
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteConta(conta.id, 'pagar')}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Modal de Cadastro/Edição de Conta */}
+      <Dialog open={isContaModalOpen} onOpenChange={setIsContaModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>{currentConta ? `Editar Conta a ${currentContaType === 'receber' ? 'Receber' : 'Pagar'}` : `Nova Conta a ${currentContaType === 'receber' ? 'Receber' : 'Pagar'}`}</DialogTitle>
+            <DialogDescription>
+              Preencha os dados da conta.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {currentContaType === 'receber' && (
+              <div className="space-y-2">
+                <Label htmlFor="cliente_id">Cliente</Label>
+                <Select id="cliente_id" value={formDataConta.cliente_id} onValueChange={(value) => handleSelectChange('cliente_id', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientes.map(cliente => (
+                      <SelectItem key={cliente.id} value={cliente.id}>{cliente.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {currentContaType === 'pagar' && (
+              <div className="space-y-2">
+                <Label htmlFor="fornecedor_id">Fornecedor</Label>
+                <Select id="fornecedor_id" value={formDataConta.fornecedor_id} onValueChange={(value) => handleSelectChange('fornecedor_id', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um fornecedor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fornecedores.map(fornecedor => (
+                      <SelectItem key={fornecedor.id} value={fornecedor.id}>{fornecedor.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="categoria_financeira_id">Categoria Financeira</Label>
+              <Select id="categoria_financeira_id" value={formDataConta.categoria_financeira_id} onValueChange={(value) => handleSelectChange('categoria_financeira_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoriasFinanceiras.filter(cat => cat.tipo === currentContaType).map(cat => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Input id="descricao" value={formDataConta.descricao} onChange={handleInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="valor_original">Valor Original</Label>
+              <Input id="valor_original" type="number" step="0.01" value={formDataConta.valor_original} onChange={handleInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_emissao">Data Emissão</Label>
+              <Input id="data_emissao" type="date" value={formDataConta.data_emissao} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_vencimento">Data Vencimento</Label>
+              <Input id="data_vencimento" type="date" value={formDataConta.data_vencimento} onChange={handleInputChange} required />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input id="observacoes" value={formDataConta.observacoes} onChange={handleInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsContaModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveConta}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Pagamento/Recebimento */}
+      <Dialog open={isPagamentoModalOpen} onOpenChange={setIsPagamentoModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{currentContaType === 'receber' ? 'Registrar Recebimento' : 'Registrar Pagamento'}</DialogTitle>
+            <DialogDescription>
+              Preencha os detalhes do {currentContaType === 'receber' ? 'recebimento' : 'pagamento'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="valor">Valor</Label>
+              <Input id="valor" type="number" step="0.01" value={formDataPagamento.valor} onChange={handlePagamentoInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="forma_pagamento">Forma de Pagamento</Label>
+              <Input id="forma_pagamento" value={formDataPagamento.forma_pagamento} onChange={handlePagamentoInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_pagamento">Data do {currentContaType === 'receber' ? 'Recebimento' : 'Pagamento'}</Label>
+              <Input id="data_pagamento" type="date" value={formDataPagamento.data_pagamento} onChange={handlePagamentoInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="numero_documento">Número do Documento</Label>
+              <Input id="numero_documento" value={formDataPagamento.numero_documento} onChange={handlePagamentoInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input id="observacoes" value={formDataPagamento.observacoes} onChange={handlePagamentoInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPagamentoModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSavePagamento}>Registrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
     </div>
   )
 }
+
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+<<<<<<< HEAD
 import {
   Plus,
   Search,
@@ -486,6 +487,322 @@ export function Estoque() {
         onSave={handleSaveMovimentacao} 
       />
     )
+=======
+import { Plus, Search, Package, Edit, Trash2, ArrowUp, ArrowDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { toast } from '@/components/ui/use-toast'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
+export function Estoque() {
+  const [pecas, setPecas] = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [fornecedores, setFornecedores] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isPecaModalOpen, setIsPecaModalOpen] = useState(false)
+  const [isCategoriaModalOpen, setIsCategoriaModalOpen] = useState(false)
+  const [isFornecedorModalOpen, setIsFornecedorModalOpen] = useState(false)
+  const [isMovimentacaoModalOpen, setIsMovimentacaoModalOpen] = useState(false)
+  const [currentPeca, setCurrentPeca] = useState(null)
+  const [currentCategoria, setCurrentCategoria] = useState(null)
+  const [currentFornecedor, setCurrentFornecedor] = useState(null)
+  const [formDataPeca, setFormDataPeca] = useState({
+    codigo: '', nome: '', descricao: '', categoria_id: '', fornecedor_id: '',
+    quantidade_atual: 0, quantidade_minima: 0, quantidade_maxima: 0, localizacao: '',
+    preco_custo: 0, preco_venda: 0, margem_lucro: 0, unidade_medida: 'UN',
+    codigo_fabricante: '', codigo_original: '', aplicacao: ''
+  })
+  const [formDataCategoria, setFormDataCategoria] = useState({ nome: '', descricao: '' })
+  const [formDataFornecedor, setFormDataFornecedor] = useState({
+    nome: '', cnpj: '', telefone: '', email: '', endereco: '', contato: '', observacoes: ''
+  })
+  const [formDataMovimentacao, setFormDataMovimentacao] = useState({
+    tipo: 'entrada', quantidade: 0, motivo: '', observacoes: ''
+  })
+
+  useEffect(() => {
+    fetchPecas()
+    fetchCategorias()
+    fetchFornecedores()
+  }, [])
+
+  const fetchPecas = async () => {
+    try {
+      const response = await fetch(`/api/pecas?search=${searchTerm}`)
+      const data = await response.json()
+      if (data.success) {
+        setPecas(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar peças.', variant: 'destructive' })
+    }
+  }
+
+  const fetchCategorias = async () => {
+    try {
+      const response = await fetch('/api/categorias')
+      const data = await response.json()
+      if (data.success) {
+        setCategorias(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar categorias.', variant: 'destructive' })
+    }
+  }
+
+  const fetchFornecedores = async () => {
+    try {
+      const response = await fetch('/api/fornecedores')
+      const data = await response.json()
+      if (data.success) {
+        setFornecedores(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar fornecedores.', variant: 'destructive' })
+    }
+  }
+
+  // Handlers para Peças
+  const handlePecaInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataPeca(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handlePecaSelectChange = (id, value) => {
+    setFormDataPeca(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSavePeca = async () => {
+    const method = currentPeca ? 'PUT' : 'POST'
+    const url = currentPeca ? `/api/pecas/${currentPeca.id}` : '/api/pecas'
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataPeca)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsPecaModalOpen(false)
+        fetchPecas()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar peça.', variant: 'destructive' })
+    }
+  }
+
+  const handleEditPeca = (peca) => {
+    setCurrentPeca(peca)
+    setFormDataPeca({
+      codigo: peca.codigo, nome: peca.nome, descricao: peca.descricao || '',
+      categoria_id: peca.categoria_id || '', fornecedor_id: peca.fornecedor_id || '',
+      quantidade_atual: peca.quantidade_atual, quantidade_minima: peca.quantidade_minima,
+      quantidade_maxima: peca.quantidade_maxima, localizacao: peca.localizacao || '',
+      preco_custo: peca.preco_custo, preco_venda: peca.preco_venda, margem_lucro: peca.margem_lucro,
+      unidade_medida: peca.unidade_medida, codigo_fabricante: peca.codigo_fabricante || '',
+      codigo_original: peca.codigo_original || '', aplicacao: peca.aplicacao || ''
+    })
+    setIsPecaModalOpen(true)
+  }
+
+  const handleDeletePeca = async (id) => {
+    if (!window.confirm('Tem certeza que deseja desativar esta peça?')) return
+    try {
+      const response = await fetch(`/api/pecas/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        fetchPecas()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao desativar peça.', variant: 'destructive' })
+    }
+  }
+
+  const handleNewPecaClick = () => {
+    setCurrentPeca(null)
+    setFormDataPeca({
+      codigo: '', nome: '', descricao: '', categoria_id: '', fornecedor_id: '',
+      quantidade_atual: 0, quantidade_minima: 0, quantidade_maxima: 0, localizacao: '',
+      preco_custo: 0, preco_venda: 0, margem_lucro: 0, unidade_medida: 'UN',
+      codigo_fabricante: '', codigo_original: '', aplicacao: ''
+    })
+    setIsPecaModalOpen(true)
+  }
+
+  // Handlers para Categorias
+  const handleCategoriaInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataCategoria(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSaveCategoria = async () => {
+    const method = currentCategoria ? 'PUT' : 'POST'
+    const url = currentCategoria ? `/api/categorias/${currentCategoria.id}` : '/api/categorias'
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataCategoria)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsCategoriaModalOpen(false)
+        fetchCategorias()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar categoria.', variant: 'destructive' })
+    }
+  }
+
+  const handleEditCategoria = (categoria) => {
+    setCurrentCategoria(categoria)
+    setFormDataCategoria({ nome: categoria.nome, descricao: categoria.descricao || '' })
+    setIsCategoriaModalOpen(true)
+  }
+
+  const handleDeleteCategoria = async (id) => {
+    if (!window.confirm('Tem certeza que deseja desativar esta categoria?')) return
+    try {
+      const response = await fetch(`/api/categorias/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        fetchCategorias()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao desativar categoria.', variant: 'destructive' })
+    }
+  }
+
+  const handleNewCategoriaClick = () => {
+    setCurrentCategoria(null)
+    setFormDataCategoria({ nome: '', descricao: '' })
+    setIsCategoriaModalOpen(true)
+  }
+
+  // Handlers para Fornecedores
+  const handleFornecedorInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataFornecedor(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSaveFornecedor = async () => {
+    const method = currentFornecedor ? 'PUT' : 'POST'
+    const url = currentFornecedor ? `/api/fornecedores/${currentFornecedor.id}` : '/api/fornecedores'
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataFornecedor)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsFornecedorModalOpen(false)
+        fetchFornecedores()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar fornecedor.', variant: 'destructive' })
+    }
+  }
+
+  const handleEditFornecedor = (fornecedor) => {
+    setCurrentFornecedor(fornecedor)
+    setFormDataFornecedor({
+      nome: fornecedor.nome, cnpj: fornecedor.cnpj || '', telefone: fornecedor.telefone || '',
+      email: fornecedor.email || '', endereco: fornecedor.endereco || '', contato: fornecedor.contato || '',
+      observacoes: fornecedor.observacoes || ''
+    })
+    setIsFornecedorModalOpen(true)
+  }
+
+  const handleDeleteFornecedor = async (id) => {
+    if (!window.confirm('Tem certeza que deseja desativar este fornecedor?')) return
+    try {
+      const response = await fetch(`/api/fornecedores/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        fetchFornecedores()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao desativar fornecedor.', variant: 'destructive' })
+    }
+  }
+
+  const handleNewFornecedorClick = () => {
+    setCurrentFornecedor(null)
+    setFormDataFornecedor({
+      nome: '', cnpj: '', telefone: '', email: '', endereco: '', contato: '', observacoes: ''
+    })
+    setIsFornecedorModalOpen(true)
+  }
+
+  // Handlers para Movimentação de Estoque
+  const handleMovimentacaoInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataMovimentacao(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleMovimentacaoSelectChange = (id, value) => {
+    setFormDataMovimentacao(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSaveMovimentacao = async () => {
+    if (!currentPeca) return
+    try {
+      const response = await fetch(`/api/pecas/${currentPeca.id}/movimentacao`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formDataMovimentacao)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsMovimentacaoModalOpen(false)
+        fetchPecas()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao registrar movimentação.', variant: 'destructive' })
+    }
+  }
+
+  const handleMovimentacaoClick = (peca) => {
+    setCurrentPeca(peca)
+    setFormDataMovimentacao({ tipo: 'entrada', quantidade: 0, motivo: '', observacoes: '' })
+    setIsMovimentacaoModalOpen(true)
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
   }
 
   return (
@@ -496,6 +813,7 @@ export function Estoque() {
           <h1 className="text-3xl font-bold text-gray-900">Estoque</h1>
           <p className="text-gray-600">Gerencie o estoque de peças e produtos</p>
         </div>
+<<<<<<< HEAD
         
         <button
           onClick={handleNovaPeca}
@@ -578,9 +896,40 @@ export function Estoque() {
               </dl>
             </div>
           </div>
+=======
+        <div className="flex space-x-2">
+          <Button onClick={handleNewPecaClick}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Peça
+          </Button>
+          <Button variant="outline" onClick={handleNewCategoriaClick}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Categoria
+          </Button>
+          <Button variant="outline" onClick={handleNewFornecedorClick}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Fornecedor
+          </Button>
         </div>
       </div>
 
+      {/* Search */}
+      <div className="flex items-center space-x-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Buscar peças por código, nome ou descrição..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') fetchPecas() }}
+            className="pl-10"
+          />
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
+        </div>
+        <Button onClick={fetchPecas}>Buscar</Button>
+      </div>
+
+<<<<<<< HEAD
       {/* Filtros e Busca */}
       <div className="bg-white shadow rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -758,3 +1107,388 @@ export function Estoque() {
     </div>
   )
 }
+=======
+      {/* Content Tabs */}
+      <Tabs defaultValue="pecas" className="w-full">
+        <TabsList>
+          <TabsTrigger value="pecas">Peças</TabsTrigger>
+          <TabsTrigger value="categorias">Categorias</TabsTrigger>
+          <TabsTrigger value="fornecedores">Fornecedores</TabsTrigger>
+        </TabsList>
+        <TabsContent value="pecas">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Package className="h-5 w-5 mr-2" />
+                Lista de Peças
+              </CardTitle>
+              <CardDescription>
+                Visualize e gerencie as peças em estoque.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Fornecedor</TableHead>
+                    <TableHead>Qtd. Atual</TableHead>
+                    <TableHead>Qtd. Mínima</TableHead>
+                    <TableHead>Preço Venda</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pecas.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="8" className="text-center">Nenhuma peça encontrada.</TableCell>
+                    </TableRow>
+                  ) : (
+                    pecas.map(peca => (
+                      <TableRow key={peca.id}>
+                        <TableCell className="font-medium">{peca.codigo}</TableCell>
+                        <TableCell>{peca.nome}</TableCell>
+                        <TableCell>{categorias.find(c => c.id === peca.categoria_id)?.nome || 'N/A'}</TableCell>
+                        <TableCell>{fornecedores.find(f => f.id === peca.fornecedor_id)?.nome || 'N/A'}</TableCell>
+                        <TableCell>{peca.quantidade_atual}</TableCell>
+                        <TableCell>{peca.quantidade_minima}</TableCell>
+                        <TableCell>R$ {peca.preco_venda.toFixed(2)}</TableCell>
+                        <TableCell className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEditPeca(peca)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleMovimentacaoClick(peca)}>
+                            <ArrowUp className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDeletePeca(peca.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="categorias">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Package className="h-5 w-5 mr-2" />
+                Lista de Categorias
+              </CardTitle>
+              <CardDescription>
+                Gerencie as categorias de peças.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categorias.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="3" className="text-center">Nenhuma categoria encontrada.</TableCell>
+                    </TableRow>
+                  ) : (
+                    categorias.map(categoria => (
+                      <TableRow key={categoria.id}>
+                        <TableCell className="font-medium">{categoria.nome}</TableCell>
+                        <TableCell>{categoria.descricao}</TableCell>
+                        <TableCell className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEditCategoria(categoria)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteCategoria(categoria.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="fornecedores">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Package className="h-5 w-5 mr-2" />
+                Lista de Fornecedores
+              </CardTitle>
+              <CardDescription>
+                Gerencie os fornecedores de peças e insumos.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>CNPJ</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fornecedores.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan="5" className="text-center">Nenhum fornecedor encontrado.</TableCell>
+                    </TableRow>
+                  ) : (
+                    fornecedores.map(fornecedor => (
+                      <TableRow key={fornecedor.id}>
+                        <TableCell className="font-medium">{fornecedor.nome}</TableCell>
+                        <TableCell>{fornecedor.cnpj}</TableCell>
+                        <TableCell>{fornecedor.telefone}</TableCell>
+                        <TableCell>{fornecedor.email}</TableCell>
+                        <TableCell className="flex space-x-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEditFornecedor(fornecedor)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => handleDeleteFornecedor(fornecedor.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Modal de Cadastro/Edição de Peça */}
+      <Dialog open={isPecaModalOpen} onOpenChange={setIsPecaModalOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>{currentPeca ? 'Editar Peça' : 'Nova Peça'}</DialogTitle>
+            <DialogDescription>
+              Preencha os dados da peça.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="codigo">Código</Label>
+              <Input id="codigo" value={formDataPeca.codigo} onChange={handlePecaInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome</Label>
+              <Input id="nome" value={formDataPeca.nome} onChange={handlePecaInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Input id="descricao" value={formDataPeca.descricao} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="categoria_id">Categoria</Label>
+              <Select id="categoria_id" value={formDataPeca.categoria_id} onValueChange={(value) => handlePecaSelectChange('categoria_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categorias.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fornecedor_id">Fornecedor</Label>
+              <Select id="fornecedor_id" value={formDataPeca.fornecedor_id} onValueChange={(value) => handlePecaSelectChange('fornecedor_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um fornecedor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fornecedores.map(forn => (
+                    <SelectItem key={forn.id} value={forn.id}>{forn.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantidade_atual">Qtd. Atual</Label>
+              <Input id="quantidade_atual" type="number" value={formDataPeca.quantidade_atual} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantidade_minima">Qtd. Mínima</Label>
+              <Input id="quantidade_minima" type="number" value={formDataPeca.quantidade_minima} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantidade_maxima">Qtd. Máxima</Label>
+              <Input id="quantidade_maxima" type="number" value={formDataPeca.quantidade_maxima} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="localizacao">Localização</Label>
+              <Input id="localizacao" value={formDataPeca.localizacao} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="preco_custo">Preço Custo</Label>
+              <Input id="preco_custo" type="number" step="0.01" value={formDataPeca.preco_custo} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="preco_venda">Preço Venda</Label>
+              <Input id="preco_venda" type="number" step="0.01" value={formDataPeca.preco_venda} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="margem_lucro">Margem Lucro (%)</Label>
+              <Input id="margem_lucro" type="number" step="0.01" value={formDataPeca.margem_lucro} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unidade_medida">Unidade Medida</Label>
+              <Input id="unidade_medida" value={formDataPeca.unidade_medida} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="codigo_fabricante">Cód. Fabricante</Label>
+              <Input id="codigo_fabricante" value={formDataPeca.codigo_fabricante} onChange={handlePecaInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="codigo_original">Cód. Original</Label>
+              <Input id="codigo_original" value={formDataPeca.codigo_original} onChange={handlePecaInputChange} />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="aplicacao">Aplicação</Label>
+              <Input id="aplicacao" value={formDataPeca.aplicacao} onChange={handlePecaInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPecaModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSavePeca}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Cadastro/Edição de Categoria */}
+      <Dialog open={isCategoriaModalOpen} onOpenChange={setIsCategoriaModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{currentCategoria ? 'Editar Categoria' : 'Nova Categoria'}</DialogTitle>
+            <DialogDescription>
+              Preencha os dados da categoria.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome</Label>
+              <Input id="nome" value={formDataCategoria.nome} onChange={handleCategoriaInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Input id="descricao" value={formDataCategoria.descricao} onChange={handleCategoriaInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCategoriaModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveCategoria}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Cadastro/Edição de Fornecedor */}
+      <Dialog open={isFornecedorModalOpen} onOpenChange={setIsFornecedorModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>{currentFornecedor ? 'Editar Fornecedor' : 'Novo Fornecedor'}</DialogTitle>
+            <DialogDescription>
+              Preencha os dados do fornecedor.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome</Label>
+              <Input id="nome" value={formDataFornecedor.nome} onChange={handleFornecedorInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cnpj">CNPJ</Label>
+              <Input id="cnpj" value={formDataFornecedor.cnpj} onChange={handleFornecedorInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input id="telefone" value={formDataFornecedor.telefone} onChange={handleFornecedorInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" value={formDataFornecedor.email} onChange={handleFornecedorInputChange} />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="endereco">Endereço</Label>
+              <Input id="endereco" value={formDataFornecedor.endereco} onChange={handleFornecedorInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contato">Contato</Label>
+              <Input id="contato" value={formDataFornecedor.contato} onChange={handleFornecedorInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input id="observacoes" value={formDataFornecedor.observacoes} onChange={handleFornecedorInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsFornecedorModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveFornecedor}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Movimentação de Estoque */}
+      <Dialog open={isMovimentacaoModalOpen} onOpenChange={setIsMovimentacaoModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Movimentar Estoque: {currentPeca?.nome}</DialogTitle>
+            <DialogDescription>
+              Registre uma entrada, saída ou ajuste de estoque.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="tipo">Tipo de Movimentação</Label>
+              <Select id="tipo" value={formDataMovimentacao.tipo} onValueChange={(value) => handleMovimentacaoSelectChange('tipo', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="entrada">Entrada</SelectItem>
+                  <SelectItem value="saida">Saída</SelectItem>
+                  <SelectItem value="ajuste">Ajuste</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="quantidade">Quantidade</Label>
+              <Input id="quantidade" type="number" value={formDataMovimentacao.quantidade} onChange={handleMovimentacaoInputChange} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="motivo">Motivo</Label>
+              <Input id="motivo" value={formDataMovimentacao.motivo} onChange={handleMovimentacaoInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Input id="observacoes" value={formDataMovimentacao.observacoes} onChange={handleMovimentacaoInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMovimentacaoModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveMovimentacao}>Registrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)

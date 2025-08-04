@@ -10,7 +10,7 @@ class Veiculo(db.Model):
     # Dados básicos
     marca = db.Column(db.String(50), nullable=False)
     modelo = db.Column(db.String(50), nullable=False)
-    ano_fabricacao = db.Column(db.Integer)
+    ano_fabricacao = db.Column(db.Integer, nullable=False)
     ano_modelo = db.Column(db.Integer)
     cor = db.Column(db.String(30))
     placa = db.Column(db.String(10), unique=True, nullable=False)
@@ -21,8 +21,7 @@ class Veiculo(db.Model):
     combustivel = db.Column(db.String(20))  # gasolina, etanol, diesel, flex, gnv
     motor = db.Column(db.String(50))
     cambio = db.Column(db.String(20))  # manual, automatico
-    quilometragem = db.Column(db.Integer, default=0)
-    
+    quilometragem_atual = db.Column(db.Integer, default=0)    
     # Documentação
     vencimento_ipva = db.Column(db.Date)
     vencimento_seguro = db.Column(db.Date)

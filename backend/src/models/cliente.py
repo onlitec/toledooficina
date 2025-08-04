@@ -11,7 +11,7 @@ class Cliente(db.Model):
     rg_ie = db.Column(db.String(20))
     telefone = db.Column(db.String(20))
     celular = db.Column(db.String(20))
-    email = db.Column(db.String(120))
+    email = db.Column(db.String(120), unique=True, nullable=False)
     
     # Endereço
     endereco = db.Column(db.String(200))

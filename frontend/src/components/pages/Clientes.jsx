@@ -1,7 +1,41 @@
 import { useState, useEffect } from 'react'
+<<<<<<< HEAD
 import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, MapPin, Car, ArrowLeft, Save, Camera, Upload, X } from 'lucide-react'
 import { useNotify } from '@/components/ui/notification'
 import { useConfirm } from '@/components/ui/confirmation-dialog'
+=======
+import { Plus, Search, Edit, Trash2, Eye, Phone, Mail, MapPin } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { toast } from '@/components/ui/use-toast'
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
 
 export function Clientes() {
   const notify = useNotify()
@@ -31,6 +65,7 @@ export function Clientes() {
     observacoes: ''
   })
 
+<<<<<<< HEAD
   const [veiculos, setVeiculos] = useState([{
     marca: '',
     modelo: '',
@@ -68,6 +103,60 @@ export function Clientes() {
       console.error('Erro ao carregar clientes:', error)
     } finally {
       setLoading(false)
+=======
+  useEffect(() => {
+    fetchClientes()
+  }, [])
+
+  const fetchClientes = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`/api/clientes?search=${searchTerm}`)
+      const data = await response.json()
+      if (data.success) {
+        setClientes(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar clientes.', variant: 'destructive' })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSelectChange = (id, value) => {
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    const method = selectedCliente ? 'PUT' : 'POST'
+    const url = selectedCliente ? `/api/clientes/${selectedCliente.id}` : '/api/clientes'
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsDialogOpen(false)
+        fetchClientes()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar cliente.', variant: 'destructive' })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
     }
   }
 
@@ -111,6 +200,7 @@ export function Clientes() {
     setShowForm(true)
   }
 
+<<<<<<< HEAD
   const handleEditarCliente = (cliente) => {
     setEditingCliente(cliente)
     // Garantir que todos os campos tenham valores string para evitar warnings do React
@@ -153,6 +243,35 @@ export function Clientes() {
       } catch (error) {
         notify.error('Erro ao excluir cliente: ' + error.message)
       }
+=======
+  const handleEdit = (cliente) => {
+    setSelectedCliente(cliente)
+    setFormData({
+      ...cliente,
+      data_nascimento: cliente.data_nascimento ? new Date(cliente.data_nascimento).toISOString().split('T')[0] : ''
+    })
+    setIsDialogOpen(true)
+  }
+
+  const handleView = (cliente) => {
+    setSelectedCliente(cliente)
+    setIsViewDialogOpen(true)
+  }
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Tem certeza que deseja desativar este cliente?')) return
+    try {
+      const response = await fetch(`/api/clientes/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        fetchClientes()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao desativar cliente.', variant: 'destructive' })
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
     }
   }
 
@@ -366,11 +485,20 @@ export function Clientes() {
 
   const formatPhone = (value) => {
     const numbers = value.replace(/\D/g, '')
+<<<<<<< HEAD
     if (numbers.length <= 10) {
       return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
     } else {
       return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
     }
+=======
+    if (numbers.length === 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
+    } else if (numbers.length === 11) {
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+    }
+    return value
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
   }
 
   const buscarCEP = async (cep) => {
@@ -900,6 +1028,7 @@ export function Clientes() {
           <p className="text-gray-600">Gerencie os clientes da oficina</p>
         </div>
         
+<<<<<<< HEAD
         <button
           onClick={handleNovoCliente}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -907,6 +1036,191 @@ export function Clientes() {
           <Plus className="h-4 w-4 mr-2" />
           Novo Cliente
         </button>
+=======
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Button onClick={resetForm}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Cliente
+          </Button>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedCliente ? 'Editar Cliente' : 'Novo Cliente'}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedCliente ? 'Atualize as informações do cliente' : 'Cadastre um novo cliente'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label htmlFor="nome">Nome / Razão Social *</Label>
+                  <Input
+                    id="nome"
+                    value={formData.nome}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="tipo_pessoa">Tipo de Pessoa</Label>
+                  <Select value={formData.tipo_pessoa} onValueChange={(value) => handleSelectChange('tipo_pessoa', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fisica">Pessoa Física</SelectItem>
+                      <SelectItem value="juridica">Pessoa Jurídica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="cpf_cnpj">CPF / CNPJ *</Label>
+                  <Input
+                    id="cpf_cnpj"
+                    value={formData.cpf_cnpj}
+                    onChange={(e) => setFormData({...formData, cpf_cnpj: formatCpfCnpj(e.target.value)})}
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="rg_ie">RG / Inscrição Estadual</Label>
+                  <Input
+                    id="rg_ie"
+                    value={formData.rg_ie}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="telefone">Telefone</Label>
+                  <Input
+                    id="telefone"
+                    value={formData.telefone}
+                    onChange={(e) => setFormData({...formData, telefone: formatPhone(e.target.value)})}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="celular">Celular</Label>
+                  <Input
+                    id="celular"
+                    value={formData.celular}
+                    onChange={(e) => setFormData({...formData, celular: formatPhone(e.target.value)})}
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <Label htmlFor="email">E-mail</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <Label htmlFor="endereco">Endereço</Label>
+                  <Input
+                    id="endereco"
+                    value={formData.endereco}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="numero">Número</Label>
+                  <Input
+                    id="numero"
+                    value={formData.numero}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="complemento">Complemento</Label>
+                  <Input
+                    id="complemento"
+                    value={formData.complemento}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="bairro">Bairro</Label>
+                  <Input
+                    id="bairro"
+                    value={formData.bairro}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="cidade">Cidade</Label>
+                  <Input
+                    id="cidade"
+                    value={formData.cidade}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="estado">Estado</Label>
+                  <Input
+                    id="estado"
+                    value={formData.estado}
+                    onChange={handleInputChange}
+                    maxLength={2}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="cep">CEP</Label>
+                  <Input
+                    id="cep"
+                    value={formData.cep}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="data_nascimento">Data de Nascimento</Label>
+                  <Input
+                    id="data_nascimento"
+                    type="date"
+                    value={formData.data_nascimento}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <Label htmlFor="observacoes">Observações</Label>
+                  <Textarea
+                    id="observacoes"
+                    value={formData.observacoes}
+                    onChange={handleInputChange}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {selectedCliente ? 'Atualizar' : 'Cadastrar'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
       </div>
 
       {/* Search */}
@@ -917,11 +1231,18 @@ export function Clientes() {
             placeholder="Buscar por nome, CPF/CNPJ ou e-mail..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+<<<<<<< HEAD
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+=======
+            onKeyDown={(e) => { if (e.key === 'Enter') fetchClientes() }}
+            className="pl-10"
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
           />
         </div>
+        <Button onClick={fetchClientes}>Buscar</Button>
       </div>
 
+<<<<<<< HEAD
       {/* Lista de Clientes */}
       <div className="bg-white shadow rounded-lg">
         <div className="px-4 py-5 sm:p-6">
@@ -1051,3 +1372,175 @@ export function Clientes() {
     </div>
   )
 }
+=======
+      {/* Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Clientes</CardTitle>
+          <CardDescription>
+            {clientes.length} cliente(s) encontrado(s)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>CPF/CNPJ</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead>Cidade</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clientes.map((cliente) => (
+                <TableRow key={cliente.id}>
+                  <TableCell className="font-medium">{cliente.nome}</TableCell>
+                  <TableCell>
+                    <Badge variant={cliente.tipo_pessoa === 'fisica' ? 'default' : 'secondary'}>
+                      {cliente.tipo_pessoa === 'fisica' ? 'PF' : 'PJ'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{cliente.cpf_cnpj}</TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      {cliente.telefone && (
+                        <div className="flex items-center text-sm">
+                          <Phone className="h-3 w-3 mr-1" />
+                          {cliente.telefone}
+                        </div>
+                      )}
+                      {cliente.email && (
+                        <div className="flex items-center text-sm">
+                          <Mail className="h-3 w-3 mr-1" />
+                          {cliente.email}
+                        </div>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{cliente.cidade}</TableCell>
+                  <TableCell>
+                    <Badge variant={cliente.ativo ? 'success' : 'destructive'}>
+                      {cliente.ativo ? 'Ativo' : 'Inativo'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleView(cliente)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(cliente)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(cliente.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Cliente</DialogTitle>
+          </DialogHeader>
+          
+          {selectedCliente && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Nome / Razão Social</p>
+                <p className="text-base font-semibold">{selectedCliente.nome}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Tipo de Pessoa</p>
+                <p className="text-base font-semibold">{selectedCliente.tipo_pessoa === 'fisica' ? 'Pessoa Física' : 'Pessoa Jurídica'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">CPF / CNPJ</p>
+                <p className="text-base font-semibold">{selectedCliente.cpf_cnpj}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">RG / Inscrição Estadual</p>
+                <p className="text-base font-semibold">{selectedCliente.rg_ie || 'N/A'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Telefone</p>
+                <p className="text-base font-semibold">{selectedCliente.telefone || 'N/A'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Celular</p>
+                <p className="text-base font-semibold">{selectedCliente.celular || 'N/A'}</p>
+              </div>
+              <div className="col-span-2 space-y-1">
+                <p className="text-sm font-medium text-gray-500">E-mail</p>
+                <p className="text-base font-semibold">{selectedCliente.email || 'N/A'}</p>
+              </div>
+              <div className="col-span-2 space-y-1">
+                <p className="text-sm font-medium text-gray-500">Endereço</p>
+                <p className="text-base font-semibold">
+                  {selectedCliente.endereco || ''} {selectedCliente.numero || ''}
+                  {selectedCliente.complemento && `, ${selectedCliente.complemento}`}
+                  {selectedCliente.bairro && `, ${selectedCliente.bairro}`}
+                  {selectedCliente.cidade && `, ${selectedCliente.cidade}`}
+                  {selectedCliente.estado && ` - ${selectedCliente.estado}`}
+                  {selectedCliente.cep && ` - ${selectedCliente.cep}`}
+                  {(!selectedCliente.endereco && !selectedCliente.numero && !selectedCliente.complemento && !selectedCliente.bairro && !selectedCliente.cidade && !selectedCliente.estado && !selectedCliente.cep) && 'N/A'}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Data de Nascimento</p>
+                <p className="text-base font-semibold">{selectedCliente.data_nascimento || 'N/A'}</p>
+              </div>
+              <div className="col-span-2 space-y-1">
+                <p className="text-sm font-medium text-gray-500">Observações</p>
+                <p className="text-base font-semibold">{selectedCliente.observacoes || 'N/A'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Data de Cadastro</p>
+                <p className="text-base font-semibold">{selectedCliente.data_cadastro ? new Date(selectedCliente.data_cadastro).toLocaleDateString() : 'N/A'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Status</p>
+                <p className="text-base font-semibold">
+                  <Badge variant={selectedCliente.ativo ? 'success' : 'destructive'}>
+                    {selectedCliente.ativo ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)

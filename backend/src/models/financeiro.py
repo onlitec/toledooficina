@@ -1,15 +1,33 @@
 from datetime import datetime
 from . import db
 
+class CategoriaFinanceira(db.Model):
+    __tablename__ = 'categorias_financeiras'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(100), nullable=False, unique=True)
+    tipo = db.Column(db.String(20), nullable=False)  # 'receita' ou 'despesa'
+    descricao = db.Column(db.Text)
+    ativo = db.Column(db.Boolean, default=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'nome': self.nome,
+            'tipo': self.tipo,
+            'descricao': self.descricao,
+            'ativo': self.ativo
+        }
+
 class ContaReceber(db.Model):
     __tablename__ = 'contas_receber'
     
     id = db.Column(db.Integer, primary_key=True)
     ordem_servico_id = db.Column(db.Integer, db.ForeignKey('ordens_servico.id'))
-    cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=True)
+    cliente_id = db.Column(db.Integer, db.ForeignKey('clientes.id'), nullable=False)
+    categoria_financeira_id = db.Column(db.Integer, db.ForeignKey('categorias_financeiras.id'), nullable=False)
     
     # Dados da conta
-    numero_documento = db.Column(db.String(50))
     descricao = db.Column(db.String(200), nullable=False)
     valor_original = db.Column(db.Numeric(10, 2), nullable=False)
     valor_pago = db.Column(db.Numeric(10, 2), default=0)
@@ -24,7 +42,6 @@ class ContaReceber(db.Model):
     
     # Status
     status = db.Column(db.String(20), default='aberta')  # aberta, paga, vencida, cancelada
-    forma_pagamento = db.Column(db.String(50))  # dinheiro, cartao, pix, boleto, etc.
     
     # Observações
     observacoes = db.Column(db.Text)
@@ -35,9 +52,10 @@ class ContaReceber(db.Model):
     
     # Relacionamentos
     pagamentos = db.relationship('PagamentoRecebimento', backref='conta_receber', lazy=True)
+    categoria = db.relationship('CategoriaFinanceira', backref='contas_receber', lazy=True)
     
     def __repr__(self):
-        return f'<ContaReceber {self.numero_documento} - {self.descricao}>'
+        return f'<ContaReceber {self.descricao}>'
     
     @property
     def valor_saldo(self):
@@ -54,7 +72,7 @@ class ContaReceber(db.Model):
             'id': self.id,
             'ordem_servico_id': self.ordem_servico_id,
             'cliente_id': self.cliente_id,
-            'numero_documento': self.numero_documento,
+            'categoria_financeira_id': self.categoria_financeira_id,
             'descricao': self.descricao,
             'valor_original': float(self.valor_original),
             'valor_pago': float(self.valor_pago) if self.valor_pago else 0,
@@ -66,7 +84,6 @@ class ContaReceber(db.Model):
             'data_vencimento': self.data_vencimento.isoformat() if self.data_vencimento else None,
             'data_pagamento': self.data_pagamento.isoformat() if self.data_pagamento else None,
             'status': self.status,
-            'forma_pagamento': self.forma_pagamento,
             'esta_vencida': self.esta_vencida,
             'observacoes': self.observacoes,
             'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None,
@@ -78,12 +95,10 @@ class ContaPagar(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     fornecedor_id = db.Column(db.Integer, db.ForeignKey('fornecedores.id'))
-    fornecedor = db.Column(db.String(100))  # Nome do fornecedor (alternativa ao fornecedor_id)
-
+    categoria_financeira_id = db.Column(db.Integer, db.ForeignKey('categorias_financeiras.id'), nullable=False)
+    
     # Dados da conta
-    numero_documento = db.Column(db.String(50))
     descricao = db.Column(db.String(200), nullable=False)
-    categoria = db.Column(db.String(50))  # aluguel, energia, telefone, compra_pecas, etc.
     valor_original = db.Column(db.Numeric(10, 2), nullable=False)
     valor_pago = db.Column(db.Numeric(10, 2), default=0)
     valor_desconto = db.Column(db.Numeric(10, 2), default=0)
@@ -97,7 +112,6 @@ class ContaPagar(db.Model):
     
     # Status
     status = db.Column(db.String(20), default='aberta')  # aberta, paga, vencida, cancelada
-    forma_pagamento = db.Column(db.String(50))
     
     # Observações
     observacoes = db.Column(db.Text)
@@ -108,9 +122,10 @@ class ContaPagar(db.Model):
     
     # Relacionamentos
     pagamentos = db.relationship('PagamentoRecebimento', backref='conta_pagar', lazy=True)
+    categoria = db.relationship('CategoriaFinanceira', backref='contas_pagar', lazy=True)
     
     def __repr__(self):
-        return f'<ContaPagar {self.numero_documento} - {self.descricao}>'
+        return f'<ContaPagar {self.descricao}>'
     
     @property
     def valor_saldo(self):
@@ -126,10 +141,8 @@ class ContaPagar(db.Model):
         return {
             'id': self.id,
             'fornecedor_id': self.fornecedor_id,
-            'fornecedor': self.fornecedor,
-            'numero_documento': self.numero_documento,
+            'categoria_financeira_id': self.categoria_financeira_id,
             'descricao': self.descricao,
-            'categoria': self.categoria,
             'valor_original': float(self.valor_original),
             'valor_pago': float(self.valor_pago) if self.valor_pago else 0,
             'valor_desconto': float(self.valor_desconto) if self.valor_desconto else 0,
@@ -140,7 +153,6 @@ class ContaPagar(db.Model):
             'data_vencimento': self.data_vencimento.isoformat() if self.data_vencimento else None,
             'data_pagamento': self.data_pagamento.isoformat() if self.data_pagamento else None,
             'status': self.status,
-            'forma_pagamento': self.forma_pagamento,
             'esta_vencida': self.esta_vencida,
             'observacoes': self.observacoes,
             'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None,
@@ -188,7 +200,7 @@ class FluxoCaixa(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.Date, nullable=False)
     tipo = db.Column(db.String(20), nullable=False)  # entrada, saida
-    categoria = db.Column(db.String(50), nullable=False)
+    categoria_financeira_id = db.Column(db.Integer, db.ForeignKey('categorias_financeiras.id'), nullable=False)
     descricao = db.Column(db.String(200), nullable=False)
     valor = db.Column(db.Numeric(10, 2), nullable=False)
     forma_pagamento = db.Column(db.String(50))
@@ -212,7 +224,7 @@ class FluxoCaixa(db.Model):
             'id': self.id,
             'data': self.data.isoformat() if self.data else None,
             'tipo': self.tipo,
-            'categoria': self.categoria,
+            'categoria_financeira_id': self.categoria_financeira_id,
             'descricao': self.descricao,
             'valor': float(self.valor),
             'forma_pagamento': self.forma_pagamento,
@@ -222,4 +234,5 @@ class FluxoCaixa(db.Model):
             'observacoes': self.observacoes,
             'data_cadastro': self.data_cadastro.isoformat() if self.data_cadastro else None
         }
+
 

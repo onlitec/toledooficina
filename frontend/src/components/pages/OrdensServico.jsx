@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+<<<<<<< HEAD
 import { Plus, Search, Edit, Trash2, ArrowLeft, Save, FileText, User, Calendar, DollarSign } from 'lucide-react'
 import { useNotify } from '@/components/ui/notification'
 import { useConfirm } from '@/components/ui/confirmation-dialog'
@@ -407,36 +408,301 @@ export function OrdensServico() {
         </div>
       </div>
     )
+=======
+import { Plus, Search, FileText, Edit, Trash2, Eye, Check, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { toast } from '@/components/ui/use-toast'
+
+export function OrdensServico() {
+  const [ordens, setOrdens] = useState([])
+  const [clientes, setClientes] = useState([])
+  const [veiculos, setVeiculos] = useState([])
+  const [tiposServico, setTiposServico] = useState([])
+  const [pecas, setPecas] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isItemServicoModalOpen, setIsItemServicoModalOpen] = useState(false)
+  const [currentItemServicoType, setCurrentItemServicoType] = useState(null) // 'item' or 'servico'
+  const [currentOrdem, setCurrentOrdem] = useState(null)
+  const [formData, setFormData] = useState({
+    cliente_id: '', veiculo_id: '', descricao_problema_servico_solicitado: '',
+    data_conclusao_prevista: '', diagnostico: '', observacoes_internas: '',
+    status: 'aberta', aprovado_cliente: false
+  })
+  const [formDataItemServico, setFormDataItemServico] = useState({
+    peca_id: '', quantidade: 0, valor_unitario: 0, desconto: 0,
+    tipo_servico_id: '', descricao: '', quantidade_horas: 0, valor_hora: 0, mecanico: ''
+  })
+
+  useEffect(() => {
+    fetchOrdens()
+    fetchClientes()
+    fetchVeiculos()
+    fetchTiposServico()
+    fetchPecas()
+  }, [])
+
+  const fetchOrdens = async () => {
+    try {
+      const response = await fetch(`/api/ordens-servico?search=${searchTerm}`)
+      const data = await response.json()
+      if (data.success) {
+        setOrdens(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar ordens de serviço.', variant: 'destructive' })
+    }
+  }
+
+  const fetchClientes = async () => {
+    try {
+      const response = await fetch('/api/clientes')
+      const data = await response.json()
+      if (data.success) {
+        setClientes(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar clientes.', variant: 'destructive' })
+    }
+  }
+
+  const fetchVeiculos = async () => {
+    try {
+      const response = await fetch('/api/veiculos')
+      const data = await response.json()
+      if (data.success) {
+        setVeiculos(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar veículos.', variant: 'destructive' })
+    }
+  }
+
+  const fetchTiposServico = async () => {
+    try {
+      const response = await fetch('/api/tipos-servico')
+      const data = await response.json()
+      if (data.success) {
+        setTiposServico(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar tipos de serviço.', variant: 'destructive' })
+    }
+  }
+
+  const fetchPecas = async () => {
+    try {
+      const response = await fetch('/api/pecas')
+      const data = await response.json()
+      if (data.success) {
+        setPecas(data.data)
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao buscar peças.', variant: 'destructive' })
+    }
+  }
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSelectChange = (id, value) => {
+    setFormData(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSaveOrdem = async () => {
+    const method = currentOrdem ? 'PUT' : 'POST'
+    const url = currentOrdem ? `/api/ordens-servico/${currentOrdem.id}` : '/api/ordens-servico'
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsModalOpen(false)
+        fetchOrdens()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao salvar ordem de serviço.', variant: 'destructive' })
+    }
+  }
+
+  const handleEditOrdem = (ordem) => {
+    setCurrentOrdem(ordem)
+    setFormData({
+      cliente_id: ordem.cliente_id,
+      veiculo_id: ordem.veiculo_id,
+      descricao_problema_servico_solicitado: ordem.descricao_problema_servico_solicitado,
+      data_conclusao_prevista: ordem.data_conclusao_prevista ? new Date(ordem.data_conclusao_prevista).toISOString().slice(0, 16) : '',
+      diagnostico: ordem.diagnostico || '',
+      observacoes_internas: ordem.observacoes_internas || '',
+      status: ordem.status,
+      aprovado_cliente: ordem.aprovado_cliente
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleDeleteOrdem = async (id) => {
+    if (!window.confirm('Tem certeza que deseja desativar esta ordem de serviço?')) return
+    try {
+      const response = await fetch(`/api/ordens-servico/${id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        fetchOrdens()
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao desativar ordem de serviço.', variant: 'destructive' })
+    }
+  }
+
+  const handleNewOrdemClick = () => {
+    setCurrentOrdem(null)
+    setFormData({
+      cliente_id: '', veiculo_id: '', descricao_problema_servico_solicitado: '',
+      data_conclusao_prevista: '', diagnostico: '', observacoes_internas: '',
+      status: 'aberta', aprovado_cliente: false
+    })
+    setIsModalOpen(true)
+  }
+
+  const handleAddItemServicoClick = (ordem, type) => {
+    setCurrentOrdem(ordem)
+    setCurrentItemServicoType(type)
+    setFormDataItemServico({
+      peca_id: '', quantidade: 0, valor_unitario: 0, desconto: 0,
+      tipo_servico_id: '', descricao: '', quantidade_horas: 0, valor_hora: 0, mecanico: ''
+    })
+    setIsItemServicoModalOpen(true)
+  }
+
+  const handleItemServicoInputChange = (e) => {
+    const { id, value } = e.target
+    setFormDataItemServico(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleItemServicoSelectChange = (id, value) => {
+    setFormDataItemServico(prev => ({ ...prev, [id]: value }))
+  }
+
+  const handleSaveItemServico = async () => {
+    if (!currentOrdem || !currentItemServicoType) return
+
+    let url = ''
+    let payload = {}
+
+    if (currentItemServicoType === 'item') {
+      url = `/api/ordens-servico/${currentOrdem.id}/itens`
+      payload = {
+        peca_id: formDataItemServico.peca_id,
+        quantidade: parseFloat(formDataItemServico.quantidade),
+        valor_unitario: parseFloat(formDataItemServico.valor_unitario),
+        desconto: parseFloat(formDataItemServico.desconto)
+      }
+    } else if (currentItemServicoType === 'servico') {
+      url = `/api/ordens-servico/${currentOrdem.id}/servicos`
+      payload = {
+        tipo_servico_id: formDataItemServico.tipo_servico_id,
+        descricao: formDataItemServico.descricao,
+        quantidade_horas: parseFloat(formDataItemServico.quantidade_horas),
+        valor_hora: parseFloat(formDataItemServico.valor_hora),
+        desconto: parseFloat(formDataItemServico.desconto),
+        mecanico: formDataItemServico.mecanico
+      }
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast({ title: 'Sucesso', description: data.message })
+        setIsItemServicoModalOpen(false)
+        fetchOrdens() // Refresh ordens to show updated totals
+      } else {
+        toast({ title: 'Erro', description: data.message, variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Erro', description: 'Falha ao adicionar item/serviço.', variant: 'destructive' })
+    }
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Ordens de Serviço</h1>
           <p className="text-gray-600">Gerencie as ordens de serviço da oficina</p>
         </div>
+<<<<<<< HEAD
         <button
           onClick={handleNovaOs}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
           <Plus className="h-4 w-4" />
+=======
+        <Button onClick={handleNewOrdemClick}>
+          <Plus className="h-4 w-4 mr-2" />
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
           Nova Ordem
         </button>
       </div>
 
+      {/* Search */}
       <div className="flex items-center space-x-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+<<<<<<< HEAD
           <input
             placeholder="Buscar ordens..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+=======
+          <Input
+            placeholder="Buscar por número da OS..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') fetchOrdens() }}
+            className="pl-10"
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
           />
         </div>
+        <Button onClick={fetchOrdens}>Buscar</Button>
       </div>
 
+<<<<<<< HEAD
       <div className="bg-white rounded-lg border overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
@@ -514,7 +780,233 @@ export function OrdensServico() {
           </tbody>
         </table>
       </div>
+=======
+      {/* Content */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="h-5 w-5 mr-2" />
+            Lista de Ordens de Serviço
+          </CardTitle>
+          <CardDescription>
+            Visualize e gerencie as ordens de serviço.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Número</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Veículo</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ordens.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan="6" className="text-center">Nenhuma ordem de serviço encontrada.</TableCell>
+                </TableRow>
+              ) : (
+                ordens.map(ordem => (
+                  <TableRow key={ordem.id}>
+                    <TableCell className="font-medium">{ordem.numero}</TableCell>
+                    <TableCell>{clientes.find(c => c.id === ordem.cliente_id)?.nome || 'N/A'}</TableCell>
+                    <TableCell>{veiculos.find(v => v.id === ordem.veiculo_id)?.placa || 'N/A'}</TableCell>
+                    <TableCell>{ordem.status}</TableCell>
+                    <TableCell>R$ {ordem.valor_total_os?.toFixed(2) || '0.00'}</TableCell>
+                    <TableCell className="flex space-x-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditOrdem(ordem)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleAddItemServicoClick(ordem, 'item')}>
+                        <Plus className="h-4 w-4" /> Item
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleAddItemServicoClick(ordem, 'servico')}>
+                        <Plus className="h-4 w-4" /> Serviço
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDeleteOrdem(ordem.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Modal de Cadastro/Edição de Ordem de Serviço */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>{currentOrdem ? 'Editar Ordem de Serviço' : 'Nova Ordem de Serviço'}</DialogTitle>
+            <DialogDescription>
+              Preencha os dados da ordem de serviço.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="cliente_id">Cliente</Label>
+              <Select id="cliente_id" value={formData.cliente_id} onValueChange={(value) => handleSelectChange('cliente_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clientes.map(cliente => (
+                    <SelectItem key={cliente.id} value={cliente.id}>{cliente.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="veiculo_id">Veículo</Label>
+              <Select id="veiculo_id" value={formData.veiculo_id} onValueChange={(value) => handleSelectChange('veiculo_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um veículo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {veiculos.filter(v => v.cliente_id === formData.cliente_id).map(veiculo => (
+                    <SelectItem key={veiculo.id} value={veiculo.id}>{veiculo.placa} - {veiculo.modelo}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="descricao_problema_servico_solicitado">Problema/Serviço Solicitado</Label>
+              <Textarea id="descricao_problema_servico_solicitado" value={formData.descricao_problema_servico_solicitado} onChange={handleInputChange} required />
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="diagnostico">Diagnóstico</Label>
+              <Textarea id="diagnostico" value={formData.diagnostico} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="data_conclusao_prevista">Data Conclusão Prevista</Label>
+              <Input id="data_conclusao_prevista" type="datetime-local" value={formData.data_conclusao_prevista} onChange={handleInputChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select id="status" value={formData.status} onValueChange={(value) => handleSelectChange('status', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aberta">Aberta</SelectItem>
+                  <SelectItem value="em_andamento">Em Andamento</SelectItem>
+                  <SelectItem value="aguardando_aprovacao">Aguardando Aprovação</SelectItem>
+                  <SelectItem value="aprovada">Aprovada</SelectItem>
+                  <SelectItem value="concluida">Concluída</SelectItem>
+                  <SelectItem value="cancelada">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 flex items-center gap-2">
+              <Input id="aprovado_cliente" type="checkbox" checked={formData.aprovado_cliente} onChange={(e) => setFormData(prev => ({ ...prev, aprovado_cliente: e.target.checked }))} className="w-4 h-4" />
+              <Label htmlFor="aprovado_cliente">Aprovado pelo Cliente</Label>
+            </div>
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="observacoes_internas">Observações Internas</Label>
+              <Textarea id="observacoes_internas" value={formData.observacoes_internas} onChange={handleInputChange} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveOrdem}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Adicionar Item/Serviço */}
+      <Dialog open={isItemServicoModalOpen} onOpenChange={setIsItemServicoModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {currentItemServicoType === 'item' ? 'Adicionar Peça à OS' : 'Adicionar Serviço à OS'}
+            </DialogTitle>
+            <DialogDescription>
+              Preencha os detalhes do {currentItemServicoType === 'item' ? 'item' : 'serviço'}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {currentItemServicoType === 'item' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="peca_id">Peça</Label>
+                  <Select id="peca_id" value={formDataItemServico.peca_id} onValueChange={(value) => handleItemServicoSelectChange('peca_id', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma peça" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pecas.map(peca => (
+                        <SelectItem key={peca.id} value={peca.id}>{peca.nome} ({peca.codigo})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantidade">Quantidade</Label>
+                  <Input id="quantidade" type="number" value={formDataItemServico.quantidade} onChange={handleItemServicoInputChange} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="valor_unitario">Valor Unitário</Label>
+                  <Input id="valor_unitario" type="number" step="0.01" value={formDataItemServico.valor_unitario} onChange={handleItemServicoInputChange} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="desconto">Desconto (%)</Label>
+                  <Input id="desconto" type="number" step="0.01" value={formDataItemServico.desconto} onChange={handleItemServicoInputChange} />
+                </div>
+              </>
+            )}
+            {currentItemServicoType === 'servico' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="tipo_servico_id">Tipo de Serviço</Label>
+                  <Select id="tipo_servico_id" value={formDataItemServico.tipo_servico_id} onValueChange={(value) => handleItemServicoSelectChange('tipo_servico_id', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de serviço" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tiposServico.map(tipo => (
+                        <SelectItem key={tipo.id} value={tipo.id}>{tipo.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="descricao">Descrição</Label>
+                  <Input id="descricao" value={formDataItemServico.descricao} onChange={handleItemServicoInputChange} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantidade_horas">Qtd. Horas</Label>
+                  <Input id="quantidade_horas" type="number" value={formDataItemServico.quantidade_horas} onChange={handleItemServicoInputChange} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="valor_hora">Valor Hora</Label>
+                  <Input id="valor_hora" type="number" step="0.01" value={formDataItemServico.valor_hora} onChange={handleItemServicoInputChange} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="desconto">Desconto (%)</Label>
+                  <Input id="desconto" type="number" step="0.01" value={formDataItemServico.desconto} onChange={handleItemServicoInputChange} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="mecanico">Mecânico</Label>
+                  <Input id="mecanico" value={formDataItemServico.mecanico} onChange={handleItemServicoInputChange} />
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsItemServicoModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSaveItemServico}>Adicionar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+>>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
     </div>
   )
 }
+
 

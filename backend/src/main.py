@@ -7,13 +7,13 @@ from flask_cors import CORS
 from src.models import db
 from src.routes.user import user_bp
 from src.routes.cliente import cliente_bp
-from src.routes.relatorios import relatorios_bp
-from src.routes.configuracao import configuracao_bp
 from src.routes.veiculo import veiculo_bp
-from src.routes.estoque import estoque_bp
+from src.routes.peca import peca_bp
 from src.routes.ferramenta import ferramenta_bp
 from src.routes.ordem_servico import ordem_servico_bp
 from src.routes.financeiro import financeiro_bp
+from src.routes.relatorios import relatorios_bp
+from src.routes.configuracao import configuracao_bp
 from src.security import security_headers, SecurityMiddleware
 from src.routes.auth import auth_bp
 from src.routes.health import health_bp
@@ -67,7 +67,7 @@ def create_app():
     app.register_blueprint(relatorios_bp, url_prefix='/api')
     app.register_blueprint(configuracao_bp, url_prefix='/api')
     app.register_blueprint(veiculo_bp, url_prefix="/api")
-    app.register_blueprint(estoque_bp, url_prefix="/api")
+    app.register_blueprint(peca_bp, url_prefix="/api")
     app.register_blueprint(ferramenta_bp, url_prefix="/api")
     app.register_blueprint(ordem_servico_bp, url_prefix="/api")
     app.register_blueprint(financeiro_bp, url_prefix="/api")
@@ -98,7 +98,7 @@ def serve_uploads(filename):
         # Se o arquivo não existe, retornar erro 404 com resposta JSON
         from flask import Response
         response = Response(
-            response=f'{{"error": "Arquivo não encontrado", "filename": "{filename}", "message": "O arquivo solicitado não existe no servidor"}}',
+            response=f'{"error": "Arquivo não encontrado", "filename": "{filename}", "message": "O arquivo solicitado não existe no servidor"}',
             status=404,
             mimetype='application/json'
         )
@@ -178,8 +178,6 @@ def debug_versao():
             'message': 'Erro crítico na rota de debug'
         }), 500
 
-
-
 @app.route("/")
 def serve_root():
     return serve_static(None)
@@ -206,3 +204,5 @@ def after_request(response):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
