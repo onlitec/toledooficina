@@ -54,17 +54,19 @@ export function SystemProvider({ children }) {
       const response = await fetch('/api/auth/refresh', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${savedRefreshToken}`
-        }
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          refresh_token: savedRefreshToken
+        })
       })
 
       if (response.ok) {
         const contentType = response.headers.get('content-type')
         if (contentType && contentType.includes('application/json')) {
           const data = await response.json()
-          if (data.success && data.data.access_token) {
-            const newToken = data.data.access_token
+          if (data.success && data.access_token) {
+            const newToken = data.access_token
             setToken(newToken)
             localStorage.setItem('token', newToken)
             return newToken
@@ -148,195 +150,138 @@ export function SystemProvider({ children }) {
     localStorage.setItem('token', accessToken)
     localStorage.setItem('user', JSON.stringify(userData))
     
-    // Só salvar refresh token se ele existir (quando remember_me é true)
+    // Salvar refresh token apenas se fornecido
     if (userRefreshToken) {
       localStorage.setItem('refreshToken', userRefreshToken)
-    } else {
-      localStorage.removeItem('refreshToken')
     }
   }
 
-  const logout = async () => {
-    try {
-      // Tentar fazer logout no servidor para invalidar refresh token
-      if (token) {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-      }
-    } catch (error) {
-      console.error('Erro ao fazer logout no servidor:', error)
-    } finally {
-      // Limpar dados locais independentemente do resultado
-      setUser(null)
-      setToken(null)
-      setRefreshToken(null)
-      setIsAuthenticated(false)
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('user')
-    }
+  const logout = () => {
+    setUser(null)
+    setToken(null)
+    setRefreshToken(null)
+    setIsAuthenticated(false)
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('user')
   }
 
-  const updateUser = (userData) => {
-    setUser(userData)
-    localStorage.setItem('user', JSON.stringify(userData))
-  }
-
-  // Função para fazer requisições autenticadas com renovação automática de token
+  // Função para fazer requisições à API com token
   const apiRequest = async (url, options = {}) => {
-    return apiRequestUtil(url, options)
+    return apiRequestUtil(url, {
+      ...options,
+      token,
+      refreshToken,
+      onTokenRefresh: (newToken) => {
+        setToken(newToken)
+        localStorage.setItem('token', newToken)
+      },
+      onAuthError: logout
+    })
   }
 
-  const carregarConfiguracoesDoSistema = async () => {
+  // Carregar configurações do sistema
+  const loadSystemConfig = async () => {
     try {
       setLoading(true)
-
-      // Carregar título da empresa
-      const tituloResponse = await apiRequest('/api/configuracoes/sistema/titulo')
-      if (tituloResponse.ok) {
-        const contentType = tituloResponse.headers.get('content-type')
-        if (contentType && contentType.includes('application/json')) {
-          const tituloResult = await tituloResponse.json()
-          if (tituloResult.success) {
-            setSystemConfig(prev => ({
-              ...prev,
-              titulo_empresa: tituloResult.data.titulo
-            }))
-          }
-        } else {
-          console.warn('Resposta não é JSON válido para título da empresa')
-        }
-      } else {
-        console.warn('Erro ao carregar título da empresa:', tituloResponse.status)
-      }
-
-      // Carregar informações do logotipo
-      const logoResponse = await apiRequest('/api/configuracoes/sistema/logotipo')
-      if (logoResponse.ok) {
-        const contentType = logoResponse.headers.get('content-type')
-        if (contentType && contentType.includes('application/json')) {
-          const logoResult = await logoResponse.json()
-          if (logoResult.success) {
-            setSystemConfig(prev => ({
-              ...prev,
-              logotipo_info: logoResult.data
-            }))
-          }
-        } else {
-          console.warn('Resposta não é JSON válido para logotipo')
-        }
-      } else {
-        console.warn('Erro ao carregar logotipo:', logoResponse.status)
+      const response = await apiRequest('/api/configuracoes/sistema')
+      if (response.success) {
+        setSystemConfig(response.data)
       }
     } catch (error) {
       console.error('Erro ao carregar configurações do sistema:', error)
-      // Se houver erro de autenticação, tentar fazer logout
-      if (error.message && error.message.includes('401')) {
-        console.log('Erro de autenticação detectado, fazendo logout...')
-        logout()
-      }
     } finally {
       setLoading(false)
     }
   }
 
-  const atualizarTituloEmpresa = (novoTitulo) => {
-    setSystemConfig(prev => ({
-      ...prev,
-      titulo_empresa: novoTitulo
-    }))
-  }
-
-  const atualizarLogotipo = (logoInfo) => {
-    setSystemConfig(prev => ({
-      ...prev,
-      logotipo_info: logoInfo
-    }))
-  }
-
-  // Funções de notificações
-  const addNotification = (notification) => {
-    setNotifications(prev => [
-      { ...notification, id: Date.now(), time: 'Agora' },
-      ...prev
-    ])
-  }
-
-  const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
-  }
-
-  const clearNotifications = () => {
-    setNotifications([])
-  }
-
-  // Verificar permissões do usuário
-  const hasPermission = (permission) => {
-    if (!user) return false
-
-    const rolePermissions = {
-      'admin': ['read', 'write', 'delete', 'manage_users', 'manage_system'],
-      'manager': ['read', 'write', 'delete'],
-      'user': ['read', 'write']
+  // Atualizar configurações do sistema
+  const updateSystemConfig = async (config) => {
+    try {
+      setLoading(true)
+      const response = await apiRequest('/api/configuracoes/sistema', {
+        method: 'PUT',
+        body: JSON.stringify(config)
+      })
+      
+      if (response.success) {
+        setSystemConfig(response.data)
+        return { success: true }
+      } else {
+        return { success: false, message: response.message }
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar configurações:', error)
+      return { success: false, message: 'Erro interno do servidor' }
+    } finally {
+      setLoading(false)
     }
-
-    const userPermissions = rolePermissions[user.role] || []
-    return userPermissions.includes(permission)
   }
 
-  const hasRole = (role) => {
-    return user && user.role === role
+  // Função para adicionar notificação
+  const addNotification = (notification) => {
+    const newNotification = {
+      id: Date.now(),
+      time: 'agora',
+      ...notification
+    }
+    setNotifications(prev => [newNotification, ...prev])
   }
 
-  const isAdmin = () => hasRole('admin')
-  const isManager = () => hasRole('manager') || hasRole('admin')
+  // Função para remover notificação
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id))
+  }
 
+  // Função para marcar notificação como lida
+  const markNotificationAsRead = (id) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === id ? { ...notif, read: true } : notif
+      )
+    )
+  }
+
+  // Verificar autenticação ao montar o componente
   useEffect(() => {
     checkAuth()
   }, [])
 
+  // Carregar configurações do sistema quando autenticado
   useEffect(() => {
     if (isAuthenticated) {
-      carregarConfiguracoesDoSistema()
+      loadSystemConfig()
     }
   }, [isAuthenticated])
 
   const value = {
-    // Autenticação
+    // Estados de autenticação
     user,
     token,
     refreshToken,
     isAuthenticated,
     authLoading,
+    
+    // Funções de autenticação
     login,
     logout,
-    updateUser,
     checkAuth,
     refreshAccessToken,
-    apiRequest,
-
-    // Permissões
-    hasPermission,
-    hasRole,
-    isAdmin,
-    isManager,
-
-    // Sistema
+    
+    // Estados do sistema
     systemConfig,
     loading,
-    carregarConfiguracoesDoSistema,
-    atualizarTituloEmpresa,
-    atualizarLogotipo,
-
-    // Notificações
+    
+    // Funções do sistema
+    loadSystemConfig,
+    updateSystemConfig,
+    apiRequest,
+    
+    // Estados e funções de notificações
     notifications,
     addNotification,
     removeNotification,
-    clearNotifications
+    markNotificationAsRead
   }
 
   return (
