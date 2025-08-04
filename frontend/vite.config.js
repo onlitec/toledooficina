@@ -21,6 +21,12 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path,
       },
+      '/static': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path,
+      },
     },
   },
 })
