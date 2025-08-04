@@ -8,7 +8,7 @@ import { Header } from '@/components/Header'
 import { ProtectedRoute, AdminRoute } from '@/components/ProtectedRoute'
 
 // Páginas
-import { Login } from '@/components/pages/Login'
+import Login from '@/components/pages/Login'
 import { ForgotPassword } from '@/components/pages/ForgotPassword'
 import { ResetPassword } from '@/components/pages/ResetPassword'
 import { Dashboard } from '@/components/pages/Dashboard'
