@@ -1,51 +1,6 @@
 version: '3.8'
 
 services:
-<<<<<<< HEAD
-=======
-  backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: erp-oficina-backend
-    environment:
-      - FLASK_ENV=production
-      - DATABASE_URL=sqlite:///src/database/app.db
-      - PYTHONPATH=/app
-    volumes:
-      - backend_data:/app/src/database
-      - uploads_data:/app/uploads
-      - backups_data:/app/backups
-    networks:
-      - erp-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/users"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: erp-oficina-frontend
-    depends_on:
-      backend:
-        condition: service_started
-    networks:
-      - erp-network
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  # PostgreSQL database (opcional, para produção)
->>>>>>> fab928f (Implementação completa dos cadastros e correção do sistema de toast)
   postgres:
     image: postgres:15
     container_name: postgres-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}
@@ -78,9 +33,6 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-oficina_db}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-here}
       - CORS_ORIGINS=https://${COOLIFY_FQDN:-localhost},http://localhost:3000
-    # Remover mapeamento de porta para Coolify
-    ports:
-      - "5000:5000"
     expose:
       - "5000"
     volumes:
@@ -104,7 +56,6 @@ services:
       - REACT_APP_API_URL=https://${COOLIFY_FQDN:-localhost}
       - REACT_APP_BACKEND_URL=https://${COOLIFY_FQDN:-localhost}
       - Pass=${Pass:-}
-    # Remover mapeamento de porta para Coolify
     expose:
       - "7080"
     depends_on:
@@ -119,7 +70,6 @@ services:
     container_name: nginx-${COOLIFY_CONTAINER_NAME:-local}-${RANDOM_ID:-001}
     volumes:
       - ./nginx/nginx.coolify.conf:/etc/nginx/nginx.conf:ro
-    # Mapeamento de porta para acesso local
     ports:
       - "7080:80"
     expose:
@@ -138,7 +88,6 @@ services:
       - "coolify.managed=true"
       - "coolify.type=application"
       - "coolify.name=erp-oficina-nginx"
-      # Labels do Traefik para roteamento automático
       - "traefik.enable=true"
       - "traefik.http.routers.erp-oficina.rule=Host(`${COOLIFY_FQDN:-oficina.onlitec.com.br}`)"
       - "traefik.http.routers.erp-oficina.tls=true"
@@ -155,3 +104,4 @@ networks:
     driver: bridge
     labels:
       - "coolify.managed=true"
+
